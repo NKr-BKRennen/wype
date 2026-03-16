@@ -219,19 +219,6 @@ Email_Settings: {
 
 ---
 
-## Bootbares USB-Image (BKR ShredOS)
-
-Fuer ein bootbares Image das direkt in BKR_NWIPE bootet:
-
-[BKR ShredOS](https://github.com/NKr-BKRennen/bkr_shredos)
-
-- Basiert auf ShredOS / Buildroot
-- Bootet direkt in BKR_NWIPE
-- x86_64 (64-bit) und i686 (32-bit)
-- Legacy BIOS und UEFI
-
----
-
 ## Bugs
 
 * BKR_NWIPE: [https://github.com/NKr-BKRennen/bkr_nwipe](https://github.com/NKr-BKRennen/bkr_nwipe)
