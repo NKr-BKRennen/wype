@@ -1,15 +1,17 @@
-# nwipe
+# BKR_NWIPE
 
-![GitHub CI badge](https://github.com/martijnvanbrummelen/nwipe/workflows/ci_ubuntu_latest/badge.svg)
-[![GitHub release](https://img.shields.io/github/release/martijnvanbrummelen/nwipe)](https://github.com/martijnvanbrummelen/nwipe/releases/)
+Angepasste Version von [nwipe](https://github.com/martijnvanbrummelen/nwipe) mit BKR-Branding und erweiterten Funktionen.
 
-`nwipe` is a fork of the `dwipe` command originally used by Darik's Boot and Nuke (DBAN).  
-It was created to run the DBAN erase engine on any Linux distribution, with better and more modern hardware support.
+Basiert auf nwipe (Fork von `dwipe` / Darik's Boot and Nuke) mit folgenden Erweiterungen:
 
-`nwipe` securely erases the entire contents of block devices. It can wipe a single drive or multiple disks in parallel, either:
+- **BKR-Branding**: Logo, angepasstes PDF-Zertifikat-Layout
+- **PDF-Zertifikate**: Device hostname, Inventory number, Disposition of Device (Checkboxen), Technician/Operator ID
+- **Secure Erase / Sanitize**: Hardware-basierte Loesch-Methoden fuer ATA, NVMe und SCSI (inkl. SSDs)
 
-- as a **command-line tool** without a GUI, or  
-- with an **ncurses-based GUI**, as shown below:
+`nwipe` loescht sicher den gesamten Inhalt von Block-Devices. Einzelne oder mehrere Laufwerke parallel, entweder:
+
+- als **Command-Line Tool** ohne GUI, oder
+- mit einer **ncurses-basierten GUI**:
 
 > **Warning**  
 > For some of nwipe’s features such as SMART data in the PDF certificate, HPA/DCO detection and other functions, nwipe uses external tools: **smartmontools** and **hdparm**.  
@@ -87,9 +89,24 @@ The user can select from a variety of recognised secure erase methods, including
 - **Schneier Wipe**  
   Bruce Schneier's 7-pass mixed–pattern algorithm.
 
-- **BMB21-2019** *(new in v0.40)*  
-  Chinese State Secrets Bureau BMB21-2019 technical requirement for data sanitisation.  
+- **BMB21-2019** *(new in v0.40)*
+  Chinese State Secrets Bureau BMB21-2019 technical requirement for data sanitisation.
   This method overwrites the device with ones (`0xFF`), then zeros (`0x00`), followed by three passes of PRNG-generated random data, and finishes with a final pass of ones (`0xFF`).
+
+- **Secure Erase** *(BKR_NWIPE)*
+  Hardware-basierter ATA/NVMe Secure Erase + Zero-Verifikation. Erreicht auch versteckte SSD-Bereiche.
+
+- **Secure Erase + PRNG Verify** *(BKR_NWIPE)*
+  Secure Erase + 1x PRNG-Pass + Verifikation.
+
+- **Sanitize Crypto Erase** *(BKR_NWIPE)*
+  NVMe/SCSI Crypto Erase - zerstoert den internen Encryption Key.
+
+- **Sanitize Block Erase** *(BKR_NWIPE)*
+  NVMe/SCSI Block Erase.
+
+- **Sanitize Overwrite** *(BKR_NWIPE)*
+  SCSI Sanitize Overwrite.
 
 ---
 
@@ -172,29 +189,39 @@ See the `nwipe(8)` man page for detailed `--sync` semantics and examples.
 
 ---
 
-## SSD considerations and limitations
+## SSD-Unterstuetzung (Secure Erase / Sanitize)
 
-In its current form, nwipe **cannot fully sanitise** solid state drives (SSDs) of any interface type:
+Die Software-basierten Loesch-Methoden (DoD, Gutmann etc.) koennen bei SSDs aufgrund von
+Wear-Levelling und Over-Provisioning nicht alle Zellen erreichen.
 
-* SAS / SATA / NVMe
-* Form factors such as 2.5", 3.5", M.2, PCIe, etc.
+**BKR_NWIPE loest dieses Problem** mit hardware-basierten Methoden, die auf Firmware-Ebene arbeiten
+und auch versteckte/reservierte Bereiche der SSD erreichen:
 
-This is due to how SSDs internally manage data:
+- **Secure Erase** (`--method=secure_erase`)
+  Interner ATA/NVMe Secure Erase Befehl + Zero-Verifikation.
 
-* SSDs use wear-levelling and frequently maintain additional, non-host-accessible memory (overprovisioning).
-* Failed blocks may be remapped to reserved areas that are not directly addressable by the OS.
-* Many vendors restrict low-level access to these areas to the drive’s own controller and firmware.
+- **Secure Erase + PRNG Verify** (`--method=secure_erase_prng`)
+  Secure Erase + 1x PRNG-Pass + Verifikation.
 
-For secure SSD sanitisation, it is strongly recommended to:
+- **Sanitize Crypto Erase** (`--method=sanitize_crypto`)
+  NVMe/SCSI Crypto Erase - zerstoert den internen Encryption Key.
 
-1. Use nwipe / ShredOS **in combination with vendor-specific tools**, for example:
+- **Sanitize Block Erase** (`--method=sanitize_block`)
+  NVMe/SCSI Block Erase.
 
-   * manufacturer Secure Erase,
-   * NVMe format / sanitize commands, or
-   * hardware vendor–provided utilities, and
-2. Independently validate the result, comparing drive contents before and after sanitisation where feasible.
+- **Sanitize Overwrite** (`--method=sanitize_overwrite`)
+  SCSI Sanitize Overwrite.
 
-A list of common SSD vendor tools and guidance can be found in the separate [SSD Guide](ssd-guide.md).
+Diese Methoden sind auch ueber die **GUI** verfuegbar unter "Secure Erase / Sanitize >" im Methoden-Menue.
+
+> **Hinweis:** Fuer Secure Erase werden `hdparm` (ATA), `nvme-cli` (NVMe) und/oder `sg3_utils` (SCSI) benoetigt.
+
+### Hintergrund
+
+SSDs verwenden intern Wear-Levelling und Over-Provisioning. Fehlgeschlagene Bloecke werden
+in reservierte Bereiche umgemappt, die vom OS nicht direkt adressierbar sind.
+Die Secure Erase / Sanitize Befehle umgehen diese Einschraenkung, da sie direkt
+von der Firmware des Laufwerks ausgefuehrt werden.
 
 ---
 
@@ -432,26 +459,20 @@ If you already have nwipe from your distro’s repo installed, remember:
 
 ---
 
-## Quick & easy, USB bootable version of nwipe master for x86_64 systems
+## Bootbares USB-Image (BKR ShredOS)
 
-If you prefer a bootable image containing the latest nwipe master, use **ShredOS**:
+Fuer ein bootbares Image mit BKR_NWIPE, siehe **BKR ShredOS**:
 
-* [ShredOS](https://github.com/PartialVolume/shredos.x86_64)
+* [BKR ShredOS](https://github.com/NKr-BKRennen/bkr_shredos)
 
-ShredOS:
+BKR ShredOS:
 
-* is ~60 MB in size,
-* can be written to a USB flash drive in seconds,
-* boots directly into a minimal environment running the latest nwipe,
-* is available for x86_64 (64-bit) and i686 (32-bit),
-* supports both legacy BIOS and UEFI.
+* basiert auf ShredOS / Buildroot,
+* bootet direkt in BKR_NWIPE,
+* unterstuetzt x86_64 (64-bit) und i686 (32-bit),
+* unterstuetzt Legacy BIOS und UEFI.
 
-It is provided as:
-
-* `.img` (USB bootable image), and
-* `.iso` (for CD/DVD/USB bootable image).
-
-See the ShredOS README for detailed instructions on downloading and writing the image.
+Siehe die BKR ShredOS README fuer Build-Anleitung.
 
 ---
 
@@ -477,16 +498,10 @@ If you know of other distributions that ship nwipe, please let us know or send a
 
 ## Bugs
 
-Bugs, feature requests, and pull requests are welcome on GitHub:
+Bugs und Feature Requests:
 
-* [https://github.com/martijnvanbrummelen/nwipe](https://github.com/martijnvanbrummelen/nwipe)
-
-Please include:
-
-* your distribution and version,
-* the nwipe version (or git commit hash),
-* hardware details (especially for I/O-related issues),
-* log output and command line options used.
+* BKR_NWIPE: [https://github.com/NKr-BKRennen/bkr_nwipe](https://github.com/NKr-BKRennen/bkr_nwipe)
+* Original nwipe: [https://github.com/martijnvanbrummelen/nwipe](https://github.com/martijnvanbrummelen/nwipe)
 
 ---
 
