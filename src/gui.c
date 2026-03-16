@@ -70,7 +70,7 @@
 
 /* Header window: width, height, x coordinate, y coordinate. */
 #define NWIPE_GUI_HEADER_W COLS
-#define NWIPE_GUI_HEADER_H 1
+#define NWIPE_GUI_HEADER_H 8
 #define NWIPE_GUI_HEADER_X 0
 #define NWIPE_GUI_HEADER_Y 0
 
@@ -83,7 +83,7 @@
 /* Options window: width, height, x coorindate, y coordinate. */
 #define NWIPE_GUI_OPTIONS_W 44
 #define NWIPE_GUI_OPTIONS_H 7
-#define NWIPE_GUI_OPTIONS_Y 1
+#define NWIPE_GUI_OPTIONS_Y 8
 #define NWIPE_GUI_OPTIONS_X 0
 
 /* Options fields, relative to their window. */
@@ -102,7 +102,7 @@
 /* Stats window: width, height, x coordinate, y coordinate. */
 #define NWIPE_GUI_STATS_W ( COLS - 44 )
 #define NWIPE_GUI_STATS_H 7
-#define NWIPE_GUI_STATS_Y 1
+#define NWIPE_GUI_STATS_Y 8
 #define NWIPE_GUI_STATS_X 44
 
 /* Stats fields, relative to their window. */
@@ -121,7 +121,7 @@
 /* Select window: width, height, x coordinate, y coordinate. */
 #define NWIPE_GUI_MAIN_W COLS
 #define NWIPE_GUI_MAIN_H ( LINES - NWIPE_GUI_MAIN_Y - 1 )
-#define NWIPE_GUI_MAIN_Y 8
+#define NWIPE_GUI_MAIN_Y 15
 #define NWIPE_GUI_MAIN_X 0
 
 #define SKIP_DEV_PREFIX 5
@@ -723,16 +723,34 @@ void nwipe_gui_create_header_window()
     /* Clear the header window. */
     werase( header_window );
 
-    /* Build header with BKR branding (BKR) */
-    snprintf( bannerplus, sizeof( bannerplus ), " BKR  %s ", banner );
+    /* ASCII art BK RENNEN logo (BKR) */
+    if( has_colors() )
+    {
+        wattron( header_window, COLOR_PAIR( 4 ) | A_BOLD );
+    }
+    mvwprintw( header_window, 0, 2, " ____  _  __  ____  _____ _   _ _   _ _____ _   _ " );
+    mvwprintw( header_window, 1, 2, "| __ )| |/ / |  _ \\| ____| \\ | | \\ | | ____| \\ | |" );
+    mvwprintw( header_window, 2, 2, "|  _ \\| ' /  | |_) |  _| |  \\| |  \\| |  _| |  \\| |" );
+    mvwprintw( header_window, 3, 2, "| |_) | . \\  |  _ <| |___| |\\  | |\\  | |___| |\\  |" );
+    mvwprintw( header_window, 4, 2, "|____/|_|\\_\\ |_| \\_\\_____|_| \\_|_| \\_|_____|_| \\_|" );
 
+    /* Build version string below logo */
+    snprintf( bannerplus, sizeof( bannerplus ), "%s", banner );
     if( nwipe_options.quiet )
     {
         strcat( bannerplus, anon_label );
     }
 
-    /* Print the product banner. */
-    nwipe_gui_title( header_window, bannerplus );
+    if( has_colors() )
+    {
+        wattroff( header_window, A_BOLD );
+        wattron( header_window, COLOR_PAIR( 2 ) );
+    }
+    mvwprintw( header_window, 6, 2, "%s", bannerplus );
+    if( has_colors() )
+    {
+        wattroff( header_window, COLOR_PAIR( 2 ) );
+    }
 
     /* Refresh the header window */
     wnoutrefresh( header_window );
