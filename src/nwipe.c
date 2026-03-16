@@ -793,6 +793,10 @@ int main( int argc, char** argv )
 
         /* Initialise the variable that tracks how much of the drive has been erased */
         c1[i]->bytes_erased = 0;
+
+        /* Initialise per-disk BKR metadata */
+        c1[i]->device_hostname[0] = '\0';
+        c1[i]->inventory_number[0] = '\0';
     }
 
     /* Pass the number selected to the struct for other threads */

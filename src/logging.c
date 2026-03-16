@@ -39,6 +39,7 @@
 #include "create_pdf.h"
 #include "miscellaneous.h"
 #include "hpa_dco.h"
+#include "send_email.h"
 
 /* Global array to hold log values to print when logging to STDOUT */
 char** log_lines;
@@ -1001,6 +1002,9 @@ void nwipe_log_summary( nwipe_thread_data_ptr_t* ptrx, nwipe_context_t** ptr, in
             /* to have some progress indication. can help if there are many/slow disks */
             fprintf( stderr, "." );
             create_single_disc_pdf( c[i] );
+
+            /* Send email with PDF certificate if enabled (BKR) */
+            nwipe_send_email( c[i] );
         }
     }
 

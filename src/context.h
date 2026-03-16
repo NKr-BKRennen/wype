@@ -222,6 +222,9 @@ typedef struct nwipe_context_t_
     int test_use1;
     int test_use2;
 
+    char device_hostname[256];  // User-entered hostname for this device (BKR)
+    char inventory_number[256];  // User-entered inventory number for this device (BKR)
+
     /*
      * Identity contains the raw serial number of the drive
      * (where applicable), however, for use within nwipe use the

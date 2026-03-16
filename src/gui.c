@@ -149,9 +149,9 @@ const char* stats_title = " Statistics ";
 
 /* Footer labels. */
 const char* main_window_footer =
-    "S=Start m=Method p=PRNG v=Verify r=Rounds b=Blanking d=Direction t=Path Space=Select c=Config CTRL+C=Quit";
+    "S=Start m=Method p=PRNG v=Verify r=Rounds b=Blanking d=Direction t=Path Space=Select H=Host I=Inv c=Config CTRL+C=Quit";
 const char* shredos_main_window_footer = "S=Start m=Method p=PRNG v=Verify r=Rounds b=Blanking d=Direction t=Path"
-                                         "Space=Select f=Font size c=Config CTRL+C=Quit";
+                                         "Space=Select H=Host I=Inv f=Font size c=Config CTRL+C=Quit";
 char** p_main_window_footer;
 const char* main_window_footer_warning_lower_case_s = "  WARNING: To start the wipe press SHIFT+S (uppercase S)  ";
 
@@ -1305,6 +1305,16 @@ void nwipe_gui_select( int count, nwipe_context_t** c )
                 /* print the drive model and serial number */
                 wprintw( main_window, " %s/%s", c[i + offset]->device_model, c[i + offset]->device_serial_no );
 
+                /* Show BKR metadata indicators if hostname or inventory number are set */
+                if( c[i + offset]->device_hostname[0] != '\0' || c[i + offset]->inventory_number[0] != '\0' )
+                {
+                    wattron( main_window, COLOR_PAIR( 5 ) );
+                    wprintw( main_window, " [H:%s I:%s]",
+                             c[i + offset]->device_hostname[0] ? c[i + offset]->device_hostname : "-",
+                             c[i + offset]->inventory_number[0] ? c[i + offset]->inventory_number : "-" );
+                    wattroff( main_window, COLOR_PAIR( 5 ) );
+                }
+
                 if( c[i + offset]->HPA_toggle_time + 1 < time( NULL ) )
                 {
                     switch( c[i + offset]->HPA_display_toggle_state )
@@ -1700,6 +1710,26 @@ void nwipe_gui_select( int count, nwipe_context_t** c )
 
                     /* Run the configuration dialog */
                     nwipe_gui_config();
+                    break;
+
+                case 'h':
+                case 'H':
+                    /* Set device hostname for focused drive (BKR) */
+                    validkeyhit = 1;
+                    if( count > 0 )
+                    {
+                        nwipe_gui_set_device_hostname( c[focus] );
+                    }
+                    break;
+
+                case 'i':
+                case 'I':
+                    /* Set inventory number for focused drive (BKR) */
+                    validkeyhit = 1;
+                    if( count > 0 )
+                    {
+                        nwipe_gui_set_device_inventory_number( c[focus] );
+                    }
                     break;
 
                 case 'S':
@@ -5135,6 +5165,158 @@ void nwipe_gui_organisation_op_tech_name( const char* op_tech_name )
     }
 
 } /* End of nwipe_gui_organisation_op_tech_name() */
+
+void nwipe_gui_set_device_hostname( nwipe_context_t* c )
+{
+    /**
+     * Allows the user to set the hostname for a specific device.
+     * Stored per-disk in the context, written into the PDF certificate.
+     */
+
+    const int tab1 = 2;
+    int yy;
+    int keystroke;
+    char buffer[256] = "";
+    int idx = 0;
+    extern int terminate_signal;
+
+    werase( footer_window );
+    nwipe_gui_title( footer_window, selection_footer_text_entry );
+    wrefresh( footer_window );
+
+    strncpy( buffer, c->device_hostname, sizeof( buffer ) - 1 );
+    buffer[sizeof( buffer ) - 1] = '\0';
+    idx = strlen( buffer );
+
+    do
+    {
+        werase( main_window );
+        nwipe_gui_create_all_windows_on_terminal_resize( 0, selection_footer_text_entry );
+        box( main_window, 0, 0 );
+        nwipe_gui_title( main_window, " Set Device Hostname " );
+
+        yy = 4;
+        mvwprintw( main_window, yy++, tab1, "Enter the hostname for device: %s", c->device_name );
+        if( c->device_model )
+        {
+            mvwprintw( main_window, yy++, tab1, "Model: %s  Serial: %s", c->device_model, c->device_serial_no );
+        }
+        mvwprintw( main_window, 2, tab1, ">%s", buffer );
+        curs_set( 1 );
+        wrefresh( main_window );
+
+        timeout( 250 );
+        keystroke = getch();
+        timeout( -1 );
+
+        switch( keystroke )
+        {
+            case 27:
+                curs_set( 0 );
+                return;
+
+            case KEY_BACKSPACE:
+            case KEY_LEFT:
+            case 127:
+                if( idx > 0 )
+                {
+                    buffer[--idx] = 0;
+                }
+                break;
+        }
+
+        if( ( keystroke >= ' ' && keystroke <= '~' ) && keystroke != '\"' && idx < 255 )
+        {
+            buffer[idx++] = keystroke;
+            buffer[idx] = 0;
+        }
+
+        curs_set( 0 );
+
+    } while( keystroke != 10 && terminate_signal != 1 );
+
+    strncpy( c->device_hostname, buffer, sizeof( c->device_hostname ) - 1 );
+    c->device_hostname[sizeof( c->device_hostname ) - 1] = '\0';
+
+    nwipe_log( NWIPE_LOG_INFO, "Device hostname set to '%s' for %s", c->device_hostname, c->device_name );
+
+} /* End of nwipe_gui_set_device_hostname() */
+
+void nwipe_gui_set_device_inventory_number( nwipe_context_t* c )
+{
+    /**
+     * Allows the user to set the inventory number for a specific device.
+     * Stored per-disk in the context, written into the PDF certificate.
+     */
+
+    const int tab1 = 2;
+    int yy;
+    int keystroke;
+    char buffer[256] = "";
+    int idx = 0;
+    extern int terminate_signal;
+
+    werase( footer_window );
+    nwipe_gui_title( footer_window, selection_footer_text_entry );
+    wrefresh( footer_window );
+
+    strncpy( buffer, c->inventory_number, sizeof( buffer ) - 1 );
+    buffer[sizeof( buffer ) - 1] = '\0';
+    idx = strlen( buffer );
+
+    do
+    {
+        werase( main_window );
+        nwipe_gui_create_all_windows_on_terminal_resize( 0, selection_footer_text_entry );
+        box( main_window, 0, 0 );
+        nwipe_gui_title( main_window, " Set Inventory Number " );
+
+        yy = 4;
+        mvwprintw( main_window, yy++, tab1, "Enter the inventory number for device: %s", c->device_name );
+        if( c->device_model )
+        {
+            mvwprintw( main_window, yy++, tab1, "Model: %s  Serial: %s", c->device_model, c->device_serial_no );
+        }
+        mvwprintw( main_window, 2, tab1, ">%s", buffer );
+        curs_set( 1 );
+        wrefresh( main_window );
+
+        timeout( 250 );
+        keystroke = getch();
+        timeout( -1 );
+
+        switch( keystroke )
+        {
+            case 27:
+                curs_set( 0 );
+                return;
+
+            case KEY_BACKSPACE:
+            case KEY_LEFT:
+            case 127:
+                if( idx > 0 )
+                {
+                    buffer[--idx] = 0;
+                }
+                break;
+        }
+
+        if( ( keystroke >= ' ' && keystroke <= '~' ) && keystroke != '\"' && idx < 255 )
+        {
+            buffer[idx++] = keystroke;
+            buffer[idx] = 0;
+        }
+
+        curs_set( 0 );
+
+    } while( keystroke != 10 && terminate_signal != 1 );
+
+    strncpy( c->inventory_number, buffer, sizeof( c->inventory_number ) - 1 );
+    c->inventory_number[sizeof( c->inventory_number ) - 1] = '\0';
+
+    nwipe_log( NWIPE_LOG_INFO, "Inventory number set to '%s' for %s", c->inventory_number, c->device_name );
+
+} /* End of nwipe_gui_set_device_inventory_number() */
 
 void nwipe_gui_list( int count, char* window_title, char** list, int* selected_entry )
 {

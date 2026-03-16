@@ -31,7 +31,8 @@ NWIPE_CORE = \
     cpu_features.c cpu_features.h \
     round_size.c round_size.h \
     ANSI-color-codes.h \
-    display_help.c
+    display_help.c \
+    send_email.c send_email.h
 
 # PRNG implementations
 NWIPE_PRNG = \

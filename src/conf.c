@@ -135,6 +135,15 @@ int nwipe_conf_init()
     nwipe_conf_populate( "Selected_Customer.Contact_Phone", "Not Applicable (CP)" );
 
     /**
+     * Email notification settings (BKR)
+     */
+    nwipe_conf_populate( "Email_Settings.Email_Enable", "DISABLED" );
+    nwipe_conf_populate( "Email_Settings.SMTP_Server", "localhost" );
+    nwipe_conf_populate( "Email_Settings.SMTP_Port", "25" );
+    nwipe_conf_populate( "Email_Settings.Sender_Address", "nwipe@localhost" );
+    nwipe_conf_populate( "Email_Settings.Recipient_Address", "" );
+
+    /**
      * Write out the new configuration.
      */
     if( !config_write_file( &nwipe_cfg, nwipe_config_file ) )

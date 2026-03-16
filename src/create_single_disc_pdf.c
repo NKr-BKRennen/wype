@@ -218,6 +218,17 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
         {
             pdf_add_text( pdf, NULL, customer_contact_phone, text_size_data, 390, 470, PDF_BLACK );
         }
+
+        /* Per-disk hostname and inventory number (BKR) */
+        if( c->device_hostname[0] != '\0' )
+        {
+            pdf_add_text( pdf, NULL, c->device_hostname, text_size_data, 420, 510, PDF_BLACK );
+        }
+        if( c->inventory_number[0] != '\0' )
+        {
+            pdf_add_text( pdf, NULL, c->inventory_number, text_size_data, 425, 490, PDF_BLACK );
+        }
+
         pdf_set_font( pdf, "Helvetica" );
     }
     else

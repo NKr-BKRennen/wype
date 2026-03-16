@@ -63,6 +63,8 @@ void nwipe_gui_organisation_business_address( const char* );  // Edit business a
 void nwipe_gui_organisation_contact_name( const char* );  // Edit business contact name
 void nwipe_gui_organisation_contact_phone( const char* );  // Edit business contact phone
 void nwipe_gui_organisation_op_tech_name( const char* );  // Edit the name of the operator/technician
+void nwipe_gui_set_device_hostname( nwipe_context_t* c );  // Set hostname for a specific device (BKR)
+void nwipe_gui_set_device_inventory_number( nwipe_context_t* c );  // Set inventory number for a specific device (BKR)
 void nwipe_gui_list( int, char* window_title, char**, int* );
 void nwipe_gui_add_customer( void );  // Add new customer
 void nwipe_gui_add_customer_name( char* );  // Add new customer name
