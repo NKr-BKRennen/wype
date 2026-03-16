@@ -1,7 +1,6 @@
 #!/bin/bash
 # BKR_NWIPE Build-Skript
-# Baut nwipe aus dem aktuellen Quellcode und installiert es.
-# Verwendung: ./build.sh [install]
+# Baut nwipe und installiert es nach /usr/local/bin.
 
 set -e
 
@@ -26,18 +25,9 @@ fi
 echo ">>> make ..."
 make -j$(nproc)
 
-echo ""
-echo "=== Build erfolgreich ==="
-echo ""
+echo ">>> make install ..."
+sudo make install
 
-if [ "$1" = "install" ]; then
-    echo ">>> make install ..."
-    sudo make install
-    echo ""
-    echo "=== Installation abgeschlossen ==="
-    echo "Starten mit: sudo nwipe"
-else
-    echo "Binary: src/nwipe"
-    echo "Direkt starten: sudo src/nwipe"
-    echo "Installieren:   ./build.sh install"
-fi
+echo ""
+echo "=== Installation abgeschlossen ==="
+echo "Starten mit: sudo nwipe"
