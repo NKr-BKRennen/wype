@@ -13,4 +13,6 @@ echo ">>> git pull origin main ..."
 git pull origin main
 
 echo ""
+
+# build.sh aufrufen (fragt am Ende ob nwipe gestartet werden soll)
 ./build.sh

@@ -763,8 +763,8 @@ void nwipe_gui_create_footer_window( const char* footer_text )
 
     if( has_colors() )
     {
-        /* Set the background style of the footer window. */
-        wbkgdset( footer_window, COLOR_PAIR( 4 ) | ' ' );
+        /* Set the background style to match main window (BKR) */
+        wbkgdset( footer_window, COLOR_PAIR( 1 ) | ' ' );
     }
 
     /* Erase the footer window. */

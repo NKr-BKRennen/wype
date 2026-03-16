@@ -30,4 +30,8 @@ sudo make install
 
 echo ""
 echo "=== Installation abgeschlossen ==="
-echo "Starten mit: sudo nwipe"
+echo ""
+read -p "nwipe jetzt starten? [j/N] " answer
+if [[ "$answer" =~ ^[jJyY]$ ]]; then
+    sudo nwipe
+fi
