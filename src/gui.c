@@ -681,6 +681,7 @@ void wype_gui_create_main_window()
 {
     /* Create the main window. */
     main_window = newwin( WYPE_GUI_MAIN_H, WYPE_GUI_MAIN_W, WYPE_GUI_MAIN_Y, WYPE_GUI_MAIN_X );
+    keypad( main_window, TRUE );
     main_panel = new_panel( main_window );
 
     if( has_colors() )
@@ -1808,6 +1809,7 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
 
                     /* Run the unified settings dialog */
                     wype_gui_settings();
+                    flushinp();
                     break;
 
                 case 'e':
@@ -1817,6 +1819,7 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
                         && c[focus]->select != WYPE_SELECT_DISABLED )
                     {
                         wype_gui_edit_disk_metadata( c[focus] );
+                        flushinp();
                     }
                     break;
 
@@ -1824,12 +1827,14 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
                 case 'H':
                     validkeyhit = 1;
                     wype_gui_help();
+                    flushinp();
                     break;
 
                 case 'l':
                 case 'L':
                     validkeyhit = 1;
                     wype_gui_changelog();
+                    flushinp();
                     break;
 
                 case KEY_F( 5 ):
@@ -5595,6 +5600,12 @@ void wype_gui_edit_disk_metadata( wype_context_t* c )
     int active_field = 0; /* 0 = hostname, 1 = inventory */
     extern int terminate_signal;
 
+    /* Flush any pending input so stale keys don't leak in */
+    flushinp();
+
+    /* Ensure keypad mode is enabled so arrow keys work as KEY_DOWN/KEY_UP */
+    keypad( main_window, TRUE );
+
     /* Pre-fill with existing values */
     strncpy( hostname_buf, c->device_hostname, sizeof( hostname_buf ) - 1 );
     hostname_buf[sizeof( hostname_buf ) - 1] = '\0';
@@ -5667,9 +5678,13 @@ void wype_gui_edit_disk_metadata( wype_context_t* c )
         keystroke = wgetch( main_window );
         wtimeout( main_window, -1 );
 
+        if( keystroke == ERR ) /* timeout, no input */
+            continue;
+
         if( keystroke == 27 ) /* ESC */
         {
             curs_set( 0 );
+            flushinp();
             return;
         }
 
@@ -5682,31 +5697,35 @@ void wype_gui_edit_disk_metadata( wype_context_t* c )
         if( keystroke == 10 ) /* Enter */
             break;
 
-        /* Get pointer to active buffer */
-        char* buf = active_field == 0 ? hostname_buf : inventory_buf;
-        int* idx = active_field == 0 ? &hostname_idx : &inventory_idx;
-
-        switch( keystroke )
+        if( keystroke == KEY_BACKSPACE || keystroke == KEY_LEFT || keystroke == 127 )
         {
-            case KEY_BACKSPACE:
-            case KEY_LEFT:
-            case 127:
-                if( *idx > 0 )
-                {
-                    buf[--(*idx)] = 0;
-                }
-                break;
+            char* buf = active_field == 0 ? hostname_buf : inventory_buf;
+            int* idx = active_field == 0 ? &hostname_idx : &inventory_idx;
+            if( *idx > 0 )
+            {
+                buf[--(*idx)] = 0;
+            }
+            continue;
         }
 
-        if( ( keystroke >= ' ' && keystroke <= '~' ) && keystroke != '\"' && *idx < 255 )
+        /* Only accept printable ASCII characters for text input */
+        if( keystroke >= ' ' && keystroke <= '~' && keystroke != '\"' )
         {
-            buf[(*idx)++] = keystroke;
-            buf[*idx] = 0;
+            char* buf = active_field == 0 ? hostname_buf : inventory_buf;
+            int* idx = active_field == 0 ? &hostname_idx : &inventory_idx;
+            if( *idx < 255 )
+            {
+                buf[(*idx)++] = keystroke;
+                buf[*idx] = 0;
+            }
         }
+
+        /* All other keys are silently ignored — no leaking */
 
     } while( terminate_signal != 1 );
 
     curs_set( 0 );
+    flushinp();
 
     /* Save values */
     strncpy( c->device_hostname, hostname_buf, sizeof( c->device_hostname ) - 1 );
@@ -5727,6 +5746,9 @@ void wype_gui_help( void )
 
     extern int terminate_signal;
     int keystroke;
+
+    flushinp();
+    keypad( main_window, TRUE );
 
     do
     {
@@ -5829,12 +5851,14 @@ void wype_gui_help( void )
 
         wrefresh( main_window );
 
-        timeout( 1000 );
-        keystroke = getch();
-        timeout( -1 );
+        wtimeout( main_window, 1000 );
+        keystroke = wgetch( main_window );
+        wtimeout( main_window, -1 );
 
     } while( keystroke != 27 && keystroke != 10 && keystroke != 'h' && keystroke != 'H'
              && keystroke != KEY_BACKSPACE && terminate_signal != 1 );
+
+    flushinp();
 }
 
 void wype_gui_changelog( void )
@@ -5905,6 +5929,9 @@ void wype_gui_changelog( void )
     };
     int log_lines = sizeof( log ) / sizeof( log[0] );
 
+    flushinp();
+    keypad( main_window, TRUE );
+
     do
     {
         werase( main_window );
@@ -5942,9 +5969,9 @@ void wype_gui_changelog( void )
 
         wrefresh( main_window );
 
-        timeout( 1000 );
-        keystroke = getch();
-        timeout( -1 );
+        wtimeout( main_window, 1000 );
+        keystroke = wgetch( main_window );
+        wtimeout( main_window, -1 );
 
         if( keystroke == KEY_DOWN || keystroke == 'j' )
         {
@@ -5959,6 +5986,8 @@ void wype_gui_changelog( void )
 
     } while( keystroke != 27 && keystroke != 10 && keystroke != 'l' && keystroke != 'L'
              && keystroke != KEY_BACKSPACE && terminate_signal != 1 );
+
+    flushinp();
 }
 
 void wype_gui_settings( void )
@@ -5975,6 +6004,9 @@ void wype_gui_settings( void )
     /* Menu items: label + action type */
     #define SETTINGS_ITEMS 8
     /* 0=Wipe Method, 1=PRNG, 2=Verification, 3=Rounds, 4=Blanking, 5=Write Direction, 6=Organization & PDF, 7=Email */
+
+    flushinp();
+    keypad( main_window, TRUE );
 
     do
     {
@@ -6148,9 +6180,9 @@ void wype_gui_settings( void )
 
         wrefresh( main_window );
 
-        timeout( 1000 );
-        keystroke = getch();
-        timeout( -1 );
+        wtimeout( main_window, 1000 );
+        keystroke = wgetch( main_window );
+        wtimeout( main_window, -1 );
 
         switch( keystroke )
         {
@@ -6204,6 +6236,7 @@ void wype_gui_settings( void )
     } while( keystroke != 27 && keystroke != KEY_BACKSPACE
              && terminate_signal != 1 );
 
+    flushinp();
     #undef SETTINGS_ITEMS
 }
 
