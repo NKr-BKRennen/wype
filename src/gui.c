@@ -1228,7 +1228,7 @@ void wype_gui_select( int count, wype_context_t** c )
                 else
                 {
                     /* Print the 'disabled' cursor. */
-                    waddch( main_window, '>' );
+                    waddch( main_window, ACS_RARROW );
                 }
             }
 
