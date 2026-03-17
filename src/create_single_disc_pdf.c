@@ -805,6 +805,7 @@ int create_single_disc_pdf( wype_context_t* ptr )
         double tech_line_y = 55.0;
         double tech_block_y = tech_line_y - 25;
 
+        pdf_add_line( pdf, NULL, 50, 57, 550, 57, 1, PDF_GRAY );
         pdf_add_text( pdf, NULL, "Technician/Operator ID", 12, 50, tech_block_y + 10, PDF_BLUE );
         pdf_add_text( pdf, NULL, "Name/ID:", 12, 60, tech_block_y - 5, PDF_GRAY );
         pdf_add_text( pdf, NULL, "Signature:", 12, 300, tech_block_y - 5, PDF_GRAY );
