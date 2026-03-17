@@ -228,14 +228,12 @@ int create_single_disc_pdf( wype_context_t* ptr )
 
     /* Per-disk hostname and inventory number (wype) - outside customer block so always written */
     pdf_set_font( pdf, "Helvetica-Bold" );
-    if( c->device_hostname[0] != '\0' )
-    {
-        pdf_add_text( pdf, NULL, c->device_hostname, text_size_data, 420, 510, PDF_BLACK );
-    }
-    if( c->inventory_number[0] != '\0' )
-    {
-        pdf_add_text( pdf, NULL, c->inventory_number, text_size_data, 420, 490, PDF_BLACK );
-    }
+    pdf_add_text( pdf, NULL,
+                  c->device_hostname[0] != '\0' ? c->device_hostname : "N/A",
+                  text_size_data, 420, 510, PDF_BLACK );
+    pdf_add_text( pdf, NULL,
+                  c->inventory_number[0] != '\0' ? c->inventory_number : "N/A",
+                  text_size_data, 420, 490, PDF_BLACK );
     pdf_set_font( pdf, "Helvetica" );
 
     /******************

@@ -1375,24 +1375,37 @@ void wype_gui_select( int count, wype_context_t** c )
                 /* print the drive model and serial number */
                 wprintw( main_window, " %s/%s", c[i + offset]->device_model, c[i + offset]->device_serial_no );
 
-                /* Show wype metadata if hostname or inventory number are set */
+                /* Show wype metadata: always show labels, N/A if not set */
+                wattron( main_window, COLOR_PAIR( 2 ) );
+                wprintw( main_window, "  Hostname: " );
+                wattroff( main_window, COLOR_PAIR( 2 ) );
                 if( c[i + offset]->device_hostname[0] != '\0' )
                 {
-                    wattron( main_window, COLOR_PAIR( 2 ) );
-                    wprintw( main_window, "  Hostname: " );
-                    wattroff( main_window, COLOR_PAIR( 2 ) );
                     wattron( main_window, A_BOLD );
                     wprintw( main_window, "%s", c[i + offset]->device_hostname );
                     wattroff( main_window, A_BOLD );
                 }
+                else
+                {
+                    wattron( main_window, COLOR_PAIR( 3 ) );
+                    wprintw( main_window, "N/A" );
+                    wattroff( main_window, COLOR_PAIR( 3 ) );
+                }
+
+                wattron( main_window, COLOR_PAIR( 2 ) );
+                wprintw( main_window, "  Inventarnummer: " );
+                wattroff( main_window, COLOR_PAIR( 2 ) );
                 if( c[i + offset]->inventory_number[0] != '\0' )
                 {
-                    wattron( main_window, COLOR_PAIR( 2 ) );
-                    wprintw( main_window, "  Inventarnummer: " );
-                    wattroff( main_window, COLOR_PAIR( 2 ) );
                     wattron( main_window, A_BOLD );
                     wprintw( main_window, "%s", c[i + offset]->inventory_number );
                     wattroff( main_window, A_BOLD );
+                }
+                else
+                {
+                    wattron( main_window, COLOR_PAIR( 3 ) );
+                    wprintw( main_window, "N/A" );
+                    wattroff( main_window, COLOR_PAIR( 3 ) );
                 }
 
                 if( c[i + offset]->HPA_toggle_time + 1 < time( NULL ) )
