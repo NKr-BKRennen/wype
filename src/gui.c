@@ -1220,7 +1220,7 @@ void wype_gui_select( int count, wype_context_t** c )
                 if( c[focus]->select == WYPE_SELECT_TRUE || c[focus]->select == WYPE_SELECT_FALSE )
                 {
                     /* Print the 'enabled' cursor. */
-                    waddch( main_window, '>' );
+                    waddch( main_window, ACS_RARROW );
                 }
 
                 else
