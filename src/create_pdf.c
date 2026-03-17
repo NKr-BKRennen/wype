@@ -259,12 +259,12 @@ void pdf_header_footer_text( wype_context_t* c, char* page_title )
     config_setting_t* setting;
     extern config_t wype_cfg;
 
-    /* Show the "Disc Erasure by WYPE version ..." footer only on pages after page 1 */
+    /* Show the "Disc Erasure by WYPE version ..." footer and footer line only on pages after page 1 */
     if( strstr( page_title, "Page 1" ) == NULL )
     {
         pdf_add_text_wrap( pdf, NULL, pdf_footer, 12, 0, 30, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf_add_line( pdf, NULL, 50, 50, 550, 50, 3, PDF_BLACK );  // Footer full width Line
     }
-    pdf_add_line( pdf, NULL, 50, 50, 550, 50, 3, PDF_BLACK );  // Footer full width Line
     pdf_add_line( pdf, NULL, 50, 650, 550, 650, 3, PDF_BLACK );  // Header full width Line
     pdf_add_line( pdf, NULL, 175, 734, 425, 734, 3, PDF_BLACK );  // Header Page number, disk model divider line
     pdf_add_image_data( pdf, NULL, 45, 665, 100, 100, bin2c_shred_db_jpg, 27063 );
