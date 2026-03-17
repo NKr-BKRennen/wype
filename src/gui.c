@@ -1339,9 +1339,9 @@ void wype_gui_select( int count, wype_context_t** c )
                 {
                     case HPA_ENABLED:
                         wprintw( main_window, " " );
-                        wattron( main_window, COLOR_PAIR( 9 ) );
+                        wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
                         wprintw( main_window, "[HS? YES]" );
-                        wattroff( main_window, COLOR_PAIR( 9 ) );
+                        wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
                         break;
 
                     case HPA_DISABLED:
@@ -1364,9 +1364,9 @@ void wype_gui_select( int count, wype_context_t** c )
                 if( c[i + offset]->device_busy )
                 {
                     wprintw( main_window, " " );
-                    wattron( main_window, COLOR_PAIR( 9 ) );
+                    wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
                     wprintw( main_window, "[IN USE]" );
-                    wattroff( main_window, COLOR_PAIR( 9 ) );
+                    wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
                 }
 
                 /* print the drive model and serial number */

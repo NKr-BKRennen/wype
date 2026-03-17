@@ -289,7 +289,7 @@ Email_Settings: {
 
 ## Bootbares ISO
 
-Für ein bootbares USB/ISO-Image das direkt in WYPE startet: [BKR ShredOS](https://github.com/NKr-BKRennen/bkr_shredos)
+Für ein bootbares USB/ISO-Image das direkt in Wype startet: [WypeOS](https://github.com/NKr-BKRennen/wypeOS)
 
 ---
 
@@ -300,5 +300,53 @@ Für ein bootbares USB/ISO-Image das direkt in WYPE startet: [BKR ShredOS](https
 
 ## Lizenz
 
-wype ist lizenziert unter der **GNU General Public License v2.0**.
+Wype ist lizenziert unter der **GNU General Public License v2.0**.
 Siehe `LICENSE` für Details.
+
+---
+
+## Versionierung
+
+Wype verwendet [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+
+- **MAJOR**: Inkompatible Änderungen (z.B. neues Config-Format, Breaking Changes)
+- **MINOR**: Neue Features, rückwärtskompatibel
+- **PATCH**: Bugfixes, kleine Verbesserungen
+
+---
+
+## Changelog
+
+### v1.1.0 (2026-03-17)
+
+**Add:**
+- Per-Disk Metadaten: Hostname und Inventarnummer pro Festplatte (H/I Tasten in der GUI)
+- Automatischer E-Mail-Versand der PDF-Zertifikate per SMTP nach Wipe-Abschluss
+- Secure Erase / Sanitize Methoden für ATA, NVMe und SCSI (Hardware-basiert)
+- ASCII-Art "BK RENNEN" Logo im GUI-Header
+- `build.sh` und `update.sh` Skripte für vereinfachtes Bauen und Aktualisieren
+- E-Mail-Konfiguration in `/etc/wype/wype.conf`
+
+**Fix:**
+- Terminal-Hintergrund bleibt nach Beenden (Ctrl+C) nicht mehr blau
+- Footer-Leiste hat jetzt einheitlichen Hintergrund (kein weißer Balken mehr)
+- [IN USE] und [HS? YES] Tags sind jetzt rot auf blau statt rot auf weiß
+- Hostname/Inventarnummer werden jetzt zuverlässig auf das PDF-Zertifikat geschrieben
+- Barcode im PDF-Zertifikat deaktiviert
+
+**Change:**
+- Projekt umbenannt von nwipe/BKR_NWIPE zu Wype
+- Modernisierte GUI: Farbschema (Teal/Navy/Yellow), farbige Status-Tags, Progress Bars
+- Eigenes Versionierungsschema (Semantic Versioning)
+- README komplett auf Deutsch, nur Debian 13
+
+**Remove:**
+- Unterstützung für andere Distributionen (nur noch Debian 13)
+- Barcode auf PDF-Zertifikat (Code bleibt erhalten, nur deaktiviert)
+
+### v1.0.0 (2026-03-16)
+
+**Add:**
+- Initiales Release basierend auf nwipe 0.40
+- BKR-Branding: Logo im PDF-Zertifikat
+- PDF-Lösch-Zertifikate mit Organisations- und Kundendetails
