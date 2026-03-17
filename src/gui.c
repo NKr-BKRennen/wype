@@ -719,6 +719,12 @@ void wype_gui_create_header_window()
     char anon_label[] = " (ANONYMIZED)";
     char bannerplus[120];
 
+    extern config_t wype_cfg;
+    config_setting_t* setting;
+    const char* customer_name = NULL;
+    const char* tech_name = NULL;
+    char info_right[256] = "";
+
     /* Create the header window. */
     header_window = newwin( WYPE_GUI_HEADER_H, WYPE_GUI_HEADER_W, WYPE_GUI_HEADER_Y, WYPE_GUI_HEADER_X );
     header_panel = new_panel( header_window );
@@ -759,6 +765,46 @@ void wype_gui_create_header_window()
         wattron( header_window, COLOR_PAIR( 2 ) );
     }
     mvwprintw( header_window, 4, 2, "%s", bannerplus );
+    if( has_colors() )
+    {
+        wattroff( header_window, COLOR_PAIR( 2 ) );
+    }
+
+    /* Show current customer and technician on the right side of the header */
+    setting = config_lookup( &wype_cfg, "Selected_Customer" );
+    if( setting != NULL )
+    {
+        config_setting_lookup_string( setting, "Customer_Name", &customer_name );
+    }
+    setting = config_lookup( &wype_cfg, "Organisation_Details" );
+    if( setting != NULL )
+    {
+        config_setting_lookup_string( setting, "Op_Tech_Name", &tech_name );
+    }
+
+    /* Build info string: "Customer: xxx | Technician: xxx" */
+    snprintf( info_right,
+              sizeof( info_right ),
+              "Customer: %s  |  Technician: %s",
+              ( customer_name && customer_name[0] && strstr( customer_name, "Not Applicable" ) == NULL )
+                  ? customer_name
+                  : "(none)",
+              ( tech_name && tech_name[0] ) ? tech_name : "(none)" );
+
+    if( has_colors() )
+    {
+        wattron( header_window, COLOR_PAIR( 2 ) );
+    }
+
+    /* Right-align the info string */
+    {
+        int info_len = strlen( info_right );
+        int info_x = COLS - info_len - 2;
+        if( info_x < 50 )
+            info_x = 50;
+        mvwprintw( header_window, 4, info_x, "%s", info_right );
+    }
+
     if( has_colors() )
     {
         wattroff( header_window, COLOR_PAIR( 2 ) );
@@ -4213,11 +4259,12 @@ void wype_gui_config( void )
 
                 case 1:
                     wype_gui_edit_organisation();
+                    wype_gui_create_header_window();
                     break;
 
                 case 2:
                     customer_processes( SELECT_CUSTOMER );
-
+                    wype_gui_create_header_window();
                     break;
 
                 case 3:
