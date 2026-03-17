@@ -150,9 +150,9 @@ const char* stats_title = " Status ";
 
 /* Footer labels. */
 const char* main_window_footer =
-    " S=Start  Space=Select  e=Edit Disk  m=Method  p=PRNG  v=Verify  r=Rounds  b=Blank  h=Help  l=Log  c=Config  ^C=Quit";
+    " S=Start  Space=Select  e=Edit Disk  c=Einstellungen  h=Hilfe  l=Log  ^C=Quit";
 const char* shredos_main_window_footer =
-    " S=Start  Space=Select  e=Edit  m=Method  p=PRNG  v=Verify  r=Rounds  b=Blank  h=Help  l=Log  f=Font  c=Config  ^C=Quit";
+    " S=Start  Space=Select  e=Edit  c=Einstellungen  h=Hilfe  l=Log  f=Font  ^C=Quit";
 char** p_main_window_footer;
 const char* main_window_footer_warning_lower_case_s = "  WARNING: To start the wipe press SHIFT+S (uppercase S)  ";
 
@@ -1798,11 +1798,11 @@ void wype_gui_select( int count, wype_context_t** c )
 
                 case 'c':
                 case 'C':
-                    /* main configuration menu */
+                    /* unified settings menu */
                     validkeyhit = 1;
 
-                    /* Run the configuration dialog */
-                    wype_gui_config();
+                    /* Run the unified settings dialog */
+                    wype_gui_settings();
                     break;
 
                 case 'e':
@@ -5889,6 +5889,252 @@ void wype_gui_changelog( void )
 
     } while( keystroke != 27 && keystroke != 10 && keystroke != 'l' && keystroke != 'L'
              && keystroke != KEY_BACKSPACE && terminate_signal != 1 );
+}
+
+void wype_gui_settings( void )
+{
+    /**
+     * Unified settings menu. Navigate with arrow keys, Enter to change.
+     */
+
+    extern int terminate_signal;
+    extern config_t wype_cfg;
+    int keystroke;
+    int focus = 0;
+
+    /* Menu items: label + action type */
+    #define SETTINGS_ITEMS 8
+    /* 0=Lösch-Methode, 1=PRNG, 2=Verifikation, 3=Durchläufe, 4=Blanking, 5=Schreibrichtung, 6=Organisation & PDF, 7=E-Mail */
+
+    do
+    {
+        werase( main_window );
+        wype_gui_create_all_windows_on_terminal_resize( 0, " Up/Down=Navigation  Enter=Aendern  ESC=Zurueck " );
+        box( main_window, 0, 0 );
+        wype_gui_title( main_window, " Einstellungen " );
+
+        int yy = 2;
+        int label_x = 5;
+        int value_x = 30;
+        int i;
+
+        /* Section: Wipe-Optionen */
+        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( main_window, yy++, 3, "Wipe-Optionen" );
+        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+        for( i = 0; i < 6; i++ )
+        {
+            if( focus == i )
+            {
+                wattron( main_window, A_REVERSE );
+            }
+
+            /* Clear the line area */
+            mvwprintw( main_window, yy, label_x, "                                                          " );
+
+            switch( i )
+            {
+                case 0:
+                    mvwprintw( main_window, yy, label_x, "Loesch-Methode" );
+                    mvwprintw( main_window, yy, value_x, "%s%s",
+                               wype_method_label( wype_options.method ),
+                               wype_options.io_direction == WYPE_IO_DIRECTION_FORWARD ? "" : " (R)" );
+                    break;
+                case 1:
+                    mvwprintw( main_window, yy, label_x, "PRNG" );
+                    mvwprintw( main_window, yy, value_x, "%s", wype_options.prng->label );
+                    break;
+                case 2:
+                    mvwprintw( main_window, yy, label_x, "Verifikation" );
+                    switch( wype_options.verify )
+                    {
+                        case WYPE_VERIFY_NONE:
+                            mvwprintw( main_window, yy, value_x, "Aus" );
+                            break;
+                        case WYPE_VERIFY_LAST:
+                            mvwprintw( main_window, yy, value_x, "Letzter Durchlauf" );
+                            break;
+                        case WYPE_VERIFY_ALL:
+                            mvwprintw( main_window, yy, value_x, "Alle Durchlaeufe" );
+                            break;
+                        default:
+                            mvwprintw( main_window, yy, value_x, "?" );
+                    }
+                    break;
+                case 3:
+                    mvwprintw( main_window, yy, label_x, "Durchlaeufe" );
+                    if( wype_options.noblank )
+                        mvwprintw( main_window, yy, value_x, "%i (ohne Blanking)", wype_options.rounds );
+                    else
+                        mvwprintw( main_window, yy, value_x, "%i (+ Blanking)", wype_options.rounds );
+                    break;
+                case 4:
+                    mvwprintw( main_window, yy, label_x, "Blanking" );
+                    if( wype_options.noblank )
+                    {
+                        wattron( main_window, COLOR_PAIR( 3 ) );
+                        mvwprintw( main_window, yy, value_x, "Aus" );
+                        wattroff( main_window, COLOR_PAIR( 3 ) );
+                    }
+                    else
+                    {
+                        wattron( main_window, COLOR_PAIR( 16 ) );
+                        mvwprintw( main_window, yy, value_x, "Ein" );
+                        wattroff( main_window, COLOR_PAIR( 16 ) );
+                    }
+                    break;
+                case 5:
+                    mvwprintw( main_window, yy, label_x, "Schreibrichtung" );
+                    mvwprintw( main_window, yy, value_x, "%s",
+                               wype_options.io_direction == WYPE_IO_DIRECTION_FORWARD ? "Vorwaerts" : "Rueckwaerts" );
+                    break;
+            }
+
+            if( focus == i )
+            {
+                wattroff( main_window, A_REVERSE );
+            }
+
+            /* Draw cursor */
+            if( focus == i )
+            {
+                wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+                mvwprintw( main_window, yy, 3, ">" );
+                wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+            }
+
+            yy++;
+        }
+
+        yy++; /* spacing */
+
+        /* Section: PDF & Organisation */
+        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( main_window, yy++, 3, "PDF & Organisation" );
+        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+        /* Item 6: Organisation & PDF */
+        if( focus == 6 )
+            wattron( main_window, A_REVERSE );
+        mvwprintw( main_window, yy, label_x, "                                                          " );
+        mvwprintw( main_window, yy, label_x, "Organisation & PDF" );
+        mvwprintw( main_window, yy, value_x, "> Menue oeffnen" );
+        if( focus == 6 )
+            wattroff( main_window, A_REVERSE );
+        if( focus == 6 )
+        {
+            wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+            mvwprintw( main_window, yy, 3, ">" );
+            wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        }
+        yy++;
+
+        yy++; /* spacing */
+
+        /* Section: System */
+        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( main_window, yy++, 3, "System" );
+        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+        /* Item 7: E-Mail */
+        if( focus == 7 )
+            wattron( main_window, A_REVERSE );
+        mvwprintw( main_window, yy, label_x, "                                                          " );
+        mvwprintw( main_window, yy, label_x, "E-Mail-Versand" );
+        {
+            const char* email_enable = NULL;
+            config_setting_t* email_setting = config_lookup( &wype_cfg, "Email_Settings" );
+            if( email_setting != NULL )
+                config_setting_lookup_string( email_setting, "Email_Enable", &email_enable );
+
+            if( email_enable != NULL && strcasecmp( email_enable, "ENABLED" ) == 0 )
+            {
+                wattron( main_window, COLOR_PAIR( 16 ) );
+                mvwprintw( main_window, yy, value_x, "Aktiv" );
+                wattroff( main_window, COLOR_PAIR( 16 ) );
+            }
+            else
+            {
+                wattron( main_window, COLOR_PAIR( 3 ) );
+                mvwprintw( main_window, yy, value_x, "Deaktiviert" );
+                wattroff( main_window, COLOR_PAIR( 3 ) );
+            }
+        }
+        if( focus == 7 )
+            wattroff( main_window, A_REVERSE );
+        if( focus == 7 )
+        {
+            wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+            mvwprintw( main_window, yy, 3, ">" );
+            wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        }
+        yy += 2;
+
+        /* Hint for email */
+        wattron( main_window, COLOR_PAIR( 2 ) );
+        mvwprintw( main_window, yy, label_x, "E-Mail-Einstellungen in /etc/wype/wype.conf bearbeiten" );
+        wattroff( main_window, COLOR_PAIR( 2 ) );
+
+        wrefresh( main_window );
+
+        timeout( 1000 );
+        keystroke = getch();
+        timeout( -1 );
+
+        switch( keystroke )
+        {
+            case KEY_DOWN:
+            case 'j':
+            case 'J':
+                if( focus < SETTINGS_ITEMS - 1 )
+                    focus++;
+                break;
+
+            case KEY_UP:
+            case 'k':
+            case 'K':
+                if( focus > 0 )
+                    focus--;
+                break;
+
+            case KEY_ENTER:
+            case 10:
+            case ' ':
+                switch( focus )
+                {
+                    case 0:
+                        wype_gui_method();
+                        break;
+                    case 1:
+                        wype_gui_prng_category();
+                        break;
+                    case 2:
+                        wype_gui_verify();
+                        break;
+                    case 3:
+                        wype_gui_rounds();
+                        break;
+                    case 4:
+                        wype_gui_noblank();
+                        break;
+                    case 5:
+                        wype_gui_io_direction();
+                        break;
+                    case 6:
+                        wype_gui_config();
+                        break;
+                    case 7:
+                        /* E-Mail: read-only, just show hint */
+                        break;
+                }
+                break;
+        }
+
+    } while( keystroke != 27 && keystroke != KEY_BACKSPACE
+             && terminate_signal != 1 );
+
+    #undef SETTINGS_ITEMS
 }
 
 void wype_gui_list( int count, char* window_title, char** list, int* selected_entry )

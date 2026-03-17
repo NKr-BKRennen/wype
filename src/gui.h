@@ -68,6 +68,7 @@ void wype_gui_set_device_inventory_number( wype_context_t* c );  // Set inventor
 void wype_gui_edit_disk_metadata( wype_context_t* c );  // Combined editor for hostname and inventory number (wype)
 void wype_gui_help( void );  // Display help screen with keybindings (wype)
 void wype_gui_changelog( void );  // Display changelog (wype)
+void wype_gui_settings( void );  // Unified settings menu (wype)
 void wype_gui_list( int, char* window_title, char**, int* );
 void wype_gui_add_customer( void );  // Add new customer
 void wype_gui_add_customer_name( char* );  // Add new customer name
