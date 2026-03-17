@@ -278,16 +278,27 @@ int wype_options_parse( int argc, char** argv )
     }
 
     /*
-     * Read PDF tag Enable/Disable settings from wype.conf if available
+     * Read PDF tag Enable/Disable settings from wype.conf if available.
+     * Only show the tag on the certificate if PDF_tag is "ENABLED".
      */
 
     setting = config_lookup( &wype_cfg, "PDF_Certificate" );
 
-    if( config_setting_lookup_string( setting, "User_Defined_Tag", &user_defined_tag ) )
     {
-        if( user_defined_tag[0] != 0 )
+        const char* pdf_tag_enable = NULL;
+        if( config_setting_lookup_string( setting, "PDF_tag", &pdf_tag_enable )
+            && pdf_tag_enable != NULL
+            && strcasecmp( pdf_tag_enable, "ENABLED" ) == 0 )
         {
-            wype_options.PDFtag = 1;
+            if( config_setting_lookup_string( setting, "User_Defined_Tag", &user_defined_tag )
+                && user_defined_tag[0] != 0 )
+            {
+                wype_options.PDFtag = 1;
+            }
+            else
+            {
+                wype_options.PDFtag = 0;
+            }
         }
         else
         {
