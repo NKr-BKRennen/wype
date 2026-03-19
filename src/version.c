@@ -10,7 +10,7 @@ const char* author_name = "NKr-BKRennen";
 const char* email_address = "niklas.kronig@ddz.de";
 const char* years = "2025-2026";
 const char* copyright = "Based on nwipe by Darik Horn, Andy Beverley, Martijn van Brummelen\n\
-and others. Modified by NKr-BKRennen.\n\
+and others. Rebuilt and modified by Niklas Kronig.\n\
 This is free software; see the source for copying conditions.\n\
 There is NO warranty; not even for MERCHANTABILITY or FITNESS\n\
 FOR A PARTICULAR PURPOSE.\n";

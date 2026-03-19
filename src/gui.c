@@ -765,6 +765,7 @@ void wype_gui_create_header_window()
         wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
         wattron( header_window, COLOR_PAIR( 2 ) );
     }
+    mvwprintw( header_window, 3, 2, "Based on nwipe - Rebuilt and modified by Niklas Kronig" );
     mvwprintw( header_window, 4, 2, "%s", bannerplus );
     if( has_colors() )
     {
