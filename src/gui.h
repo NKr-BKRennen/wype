@@ -90,6 +90,7 @@ void wype_gui_benchmark_prng( void );
  * of mode 0 enable the A key which means accept & display drive selection.
  */
 void wype_gui_preview_org_customer( int );  // Preview window  for wipe organisation and customer
+void wype_gui_startup_info( void );  // Startup overview showing org/customer with direct customer selection
 
 void wype_gui_set_system_year( void );  // Set the systems current year
 void wype_gui_set_system_month( void );  // Set the systems month

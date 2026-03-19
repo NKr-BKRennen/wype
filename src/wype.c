@@ -748,11 +748,8 @@ int main( int argc, char** argv )
             }
             else
             {
-                /* If selected show customer and organisation details BEFORE drive selection screen */
-                if( wype_options.PDF_preview_details == 1 )
-                {
-                    wype_gui_preview_org_customer( SHOWING_PRIOR_TO_DRIVE_SELECTION );
-                }
+                /* Show startup overview with org/customer info and customer selection */
+                wype_gui_startup_info();
 
                 /* Get device selections from the user. */
                 wype_gui_select( &wype_enumerated, &c1 );

@@ -1,6 +1,40 @@
 RELEASE NOTES
 =============
-v0.40
+
+Wype v1.3.0 (2026-03-19)
+-----------------------
+**Add:**
+- Startup overview screen: shows all organisation and customer details on every launch
+- Direct customer selection from the startup screen (no need to navigate to config menu first)
+- Edit organisation directly from the startup screen
+
+**Change:**
+- Startup overview is always shown before drive selection (replaces optional "PDF Preview at Start")
+- Updated workflow: review and confirm org/customer before drive selection
+
+Wype v1.2.0 (2026-03-17)
+-----------------------
+- Sanitize Crypto Erase + Verify: new wipe method with full read-back verification
+- Unified settings menu (c key) with arrow navigation
+- Disk metadata editor (e key): Hostname + Inventory Number in a single dialog
+- Help page (h key) and Changelog view (l key) in the GUI
+- Email status display, batch email, notification email, drive rescan (F5)
+
+Wype v1.1.0 (2026-03-17)
+-----------------------
+- Per-disk metadata: Hostname and Inventory Number per drive
+- Automatic email delivery of PDF certificates via SMTP
+- Secure Erase / Sanitize methods for ATA, NVMe and SCSI
+- ASCII-Art BK RENNEN logo in GUI header
+
+Wype v1.0.0 (2026-03-16)
+-----------------------
+- Initial release based on nwipe 0.40
+- BKR branding and PDF wipe certificates
+
+---
+
+nwipe v0.40
 -----------------------
 includes the following changes:
 

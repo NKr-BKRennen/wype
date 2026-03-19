@@ -20,13 +20,14 @@ Based on nwipe (fork of `dwipe` / Darik's Boot and Nuke) with the following exte
 This is what a typical wipe process with Wype looks like:
 
 1. **Start Wype** → `sudo wype`
-2. **Select Wipe Method** → press `m` → e.g. "DoD 5220.22-M" for HDDs or "Secure Erase / Sanitize >" for SSDs
-3. **Adjust options** (optional) → `v` Verification, `r` Rounds, `p` PRNG, `b` Blanking
-4. **Select disks** → Arrow keys + `Space` (or `Ctrl+A` for all)
-5. **Enter metadata** → press `e` on each disk → enter Hostname and Inventory Number
-6. **Start wipe** → `S` (Shift+S) — Wype automatically warns if metadata is missing
-7. **Wait** → Progress is displayed live. If email delivery is active, a notification is sent when all wipes are finished.
-8. **Confirm** → press `Enter` → PDFs are created and sent via email
+2. **Startup Overview** → review organisation and customer details → select or change customer → press `A` to continue
+3. **Select Wipe Method** → press `m` → e.g. "DoD 5220.22-M" for HDDs or "Secure Erase / Sanitize >" for SSDs
+4. **Adjust options** (optional) → `v` Verification, `r` Rounds, `p` PRNG, `b` Blanking
+5. **Select disks** → Arrow keys + `Space` (or `Ctrl+A` for all)
+6. **Enter metadata** → press `e` on each disk → enter Hostname and Inventory Number
+7. **Start wipe** → `S` (Shift+S) — Wype automatically warns if metadata is missing
+8. **Wait** → Progress is displayed live. If email delivery is active, a notification is sent when all wipes are finished.
+9. **Confirm** → press `Enter` → PDFs are created and sent via email
 
 > **Tip:** `h` shows a Help page with all key bindings at any time. `l` shows the Changelog.
 
@@ -343,6 +344,17 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ---
 
 ## Changelog
+
+### v1.3.0 (2026-03-19)
+
+**Add:**
+- Startup overview screen: shows all organisation and customer details on every launch
+- Direct customer selection from the startup screen
+- Edit organisation directly from the startup screen
+
+**Change:**
+- Startup overview always shown before drive selection (replaces optional "PDF Preview at Start")
+- Updated workflow: review org/customer before drive selection
 
 ### v1.2.0 (2026-03-17)
 

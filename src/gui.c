@@ -174,6 +174,7 @@ const char* selection_footer_config = "J=Down K=Up Return=Select ESC|Backspace=b
 const char* selection_footer_benchmark = "ESC|Backspace=Back ENTER=Run Ctrl+C=Quit";
 const char* selection_footer_preview_prior_to_drive_selection =
     "A=Accept & display drives J=Down K=Up Space=Select Backspace=Cancel Ctrl+C=Quit";
+const char* selection_footer_startup = "A=Continue  J=Down K=Up  Enter=Select  Ctrl+C=Quit";
 const char* selection_footer_add_customer = "S=Save J=Down K=Up Space=Select Backspace=Cancel Ctrl+C=Quit";
 const char* selection_footer_add_customer_yes_no = "Save Customer Details Y/N";
 char** p_end_wipe_footer; /* Contains a pointer to either end_wipe_footer or shredos_end_wipe_footer */
@@ -5910,17 +5911,13 @@ void wype_gui_help( void )
         wattron( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy++, tab1, "1." );
         wattroff( main_window, COLOR_PAIR( 2 ) );
-        mvwprintw( main_window, yy - 1, 6, "Press c > Set method/PRNG/organization" );
+        mvwprintw( main_window, yy - 1, 6, "Startup: review org/customer, select customer" );
         wattron( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy++, tab1, "2." );
         wattroff( main_window, COLOR_PAIR( 2 ) );
-        mvwprintw( main_window, yy - 1, 6, "Space > Select drives" );
+        mvwprintw( main_window, yy - 1, 6, "Space > Select drives, e > Set metadata" );
         wattron( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy++, tab1, "3." );
-        wattroff( main_window, COLOR_PAIR( 2 ) );
-        mvwprintw( main_window, yy - 1, 6, "e > Enter hostname/inventory number per drive" );
-        wattron( main_window, COLOR_PAIR( 2 ) );
-        mvwprintw( main_window, yy++, tab1, "4." );
         wattroff( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy - 1, 6, "S > Start wipe, Enter > PDFs + Email" );
 
@@ -5949,6 +5946,17 @@ void wype_gui_changelog( void )
     /* Changelog lines */
     const char* log[] = {
         "Wype Changelog",
+        "",
+        "v1.3.0 (2026-03-19)",
+        "",
+        "  Add:",
+        "  - Startup overview screen: shows org/customer info on every launch",
+        "  - Direct customer selection from the startup screen",
+        "  - Edit organisation directly from the startup screen",
+        "",
+        "  Change:",
+        "  - Startup overview always shown (replaces optional PDF preview at start)",
+        "  - Workflow updated: review org/customer before drive selection",
         "",
         "v1.2.0",
         "",
@@ -7688,6 +7696,189 @@ void wype_gui_preview_org_customer( int mode )
              && terminate_signal != 1 );
 
 } /* end of wype_gui_preview_org_customer( void ) */
+
+void wype_gui_startup_info( void )
+{
+    /**
+     * Display a startup overview showing organisation and customer details.
+     * The user can select a customer or edit the organisation before
+     * continuing to the drive selection screen.
+     */
+
+    extern int terminate_signal;
+    extern config_t wype_cfg;
+
+    int keystroke;
+    int focus = 0;
+    const int action_count = 2;
+
+    config_setting_t* setting;
+    const char* business_name = NULL;
+    const char* business_address = NULL;
+    const char* contact_name = NULL;
+    const char* contact_phone = NULL;
+    const char* op_tech_name = NULL;
+    const char* customer_name = NULL;
+    const char* customer_address = NULL;
+    const char* customer_contact_name = NULL;
+    const char* customer_contact_phone = NULL;
+
+    char output_str[FIELD_LENGTH];
+    int wlines, wcols;
+
+    const int tab1 = 3;
+    const int tab2 = 28;
+    const int action_row = 15;
+
+    do
+    {
+        werase( main_window );
+        wype_gui_create_all_windows_on_terminal_resize( 0, selection_footer_startup );
+
+        werase( footer_window );
+        wype_gui_title( footer_window, selection_footer_startup );
+        wrefresh( footer_window );
+
+        getmaxyx( main_window, wlines, wcols );
+
+        /* ===== Organisation Details (read-only display) ===== */
+        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( main_window, 2, tab1, "Organisation Details" );
+        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+        setting = config_lookup( &wype_cfg, "Organisation_Details" );
+        if( setting != NULL )
+        {
+            if( config_setting_lookup_string( setting, "Business_Name", &business_name ) )
+            {
+                str_truncate( wcols, tab2, business_name, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 3, tab1 + 2, "Business Name" );
+                mvwprintw( main_window, 3, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Business_Address", &business_address ) )
+            {
+                str_truncate( wcols, tab2, business_address, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 4, tab1 + 2, "Business Address" );
+                mvwprintw( main_window, 4, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Contact_Name", &contact_name ) )
+            {
+                str_truncate( wcols, tab2, contact_name, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 5, tab1 + 2, "Contact Name" );
+                mvwprintw( main_window, 5, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Contact_Phone", &contact_phone ) )
+            {
+                str_truncate( wcols, tab2, contact_phone, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 6, tab1 + 2, "Contact Phone" );
+                mvwprintw( main_window, 6, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Op_Tech_Name", &op_tech_name ) )
+            {
+                str_truncate( wcols, tab2, op_tech_name, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 7, tab1 + 2, "Technician" );
+                mvwprintw( main_window, 7, tab2, ": %s", output_str );
+            }
+        }
+
+        /* ===== Selected Customer (read-only display) ===== */
+        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( main_window, 9, tab1, "Selected Customer" );
+        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+        setting = config_lookup( &wype_cfg, "Selected_Customer" );
+        if( setting != NULL )
+        {
+            if( config_setting_lookup_string( setting, "Customer_Name", &customer_name ) )
+            {
+                str_truncate( wcols, tab2, customer_name, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 10, tab1 + 2, "Customer Name" );
+                mvwprintw( main_window, 10, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Customer_Address", &customer_address ) )
+            {
+                str_truncate( wcols, tab2, customer_address, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 11, tab1 + 2, "Customer Address" );
+                mvwprintw( main_window, 11, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Contact_Name", &customer_contact_name ) )
+            {
+                str_truncate( wcols, tab2, customer_contact_name, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 12, tab1 + 2, "Contact Name" );
+                mvwprintw( main_window, 12, tab2, ": %s", output_str );
+            }
+            if( config_setting_lookup_string( setting, "Contact_Phone", &customer_contact_phone ) )
+            {
+                str_truncate( wcols, tab2, customer_contact_phone, output_str, FIELD_LENGTH );
+                mvwprintw( main_window, 13, tab1 + 2, "Contact Phone" );
+                mvwprintw( main_window, 13, tab2, ": %s", output_str );
+            }
+        }
+
+        /* ===== Action Items (navigable) ===== */
+        wattron( main_window, COLOR_PAIR( 16 ) | A_BOLD );
+        mvwprintw( main_window, action_row, tab1 + 2, "Select Customer" );
+        mvwprintw( main_window, action_row + 1, tab1 + 2, "Edit Organisation" );
+        wattroff( main_window, COLOR_PAIR( 16 ) | A_BOLD );
+
+        /* Print cursor at the selected action item */
+        mvwaddch( main_window, action_row + focus, tab1, ACS_RARROW );
+
+        /* Add border and title */
+        box( main_window, 0, 0 );
+        wype_gui_title( main_window, " Startup Overview " );
+        wrefresh( main_window );
+
+        /* Wait for input */
+        timeout( 250 );
+        keystroke = getch();
+        timeout( -1 );
+
+        switch( keystroke )
+        {
+            case KEY_DOWN:
+            case 'j':
+            case 'J':
+                if( focus < action_count - 1 )
+                {
+                    focus++;
+                }
+                break;
+
+            case KEY_UP:
+            case 'k':
+            case 'K':
+                if( focus > 0 )
+                {
+                    focus--;
+                }
+                break;
+
+            case 'A':
+            case 'a':
+                return;
+
+            case KEY_ENTER:
+            case 10:
+            case ' ':
+                switch( focus )
+                {
+                    case 0:
+                        customer_processes( SELECT_CUSTOMER );
+                        wype_gui_create_header_window();
+                        break;
+
+                    case 1:
+                        wype_gui_edit_organisation();
+                        wype_gui_create_header_window();
+                        break;
+                }
+                break;
+        }
+
+    } while( terminate_signal != 1 );
+
+} /* end of wype_gui_startup_info */
 
 void wype_gui_set_date_time( void )
 {
