@@ -719,12 +719,13 @@ void wype_gui_create_header_window()
 {
     char anon_label[] = " (ANONYMIZED)";
     char bannerplus[120];
+    char info_line[256] = "";
 
     extern config_t wype_cfg;
     config_setting_t* setting;
+    const char* business_name = NULL;
     const char* customer_name = NULL;
     const char* tech_name = NULL;
-    char info_right[256] = "";
 
     /* Create the header window. */
     header_window = newwin( WYPE_GUI_HEADER_H, WYPE_GUI_HEADER_W, WYPE_GUI_HEADER_Y, WYPE_GUI_HEADER_X );
@@ -767,45 +768,34 @@ void wype_gui_create_header_window()
     }
     mvwprintw( header_window, 3, 2, "Based on nwipe - Rebuilt and modified by Niklas Kronig" );
     mvwprintw( header_window, 4, 2, "%s", bannerplus );
-    if( has_colors() )
-    {
-        wattroff( header_window, COLOR_PAIR( 2 ) );
-    }
 
-    /* Show current customer and technician on the right side of the header */
+    /* Read organisation, customer and technician from config */
+    setting = config_lookup( &wype_cfg, "Organisation_Details" );
+    if( setting != NULL )
+    {
+        config_setting_lookup_string( setting, "Business_Name", &business_name );
+        config_setting_lookup_string( setting, "Op_Tech_Name", &tech_name );
+    }
     setting = config_lookup( &wype_cfg, "Selected_Customer" );
     if( setting != NULL )
     {
         config_setting_lookup_string( setting, "Customer_Name", &customer_name );
     }
-    setting = config_lookup( &wype_cfg, "Organisation_Details" );
-    if( setting != NULL )
-    {
-        config_setting_lookup_string( setting, "Op_Tech_Name", &tech_name );
-    }
 
-    /* Build info string: "Customer: xxx | Technician: xxx" */
-    snprintf( info_right,
-              sizeof( info_right ),
-              "Customer: %s  |  Technician: %s",
+    /* Build info line: "Org: xxx  |  Customer: xxx  |  Technician: xxx" */
+    snprintf( info_line,
+              sizeof( info_line ),
+              "Org: %s  |  Customer: %s  |  Technician: %s",
+              ( business_name && business_name[0] && strstr( business_name, "Not Applicable" ) == NULL )
+                  ? business_name
+                  : "(none)",
               ( customer_name && customer_name[0] && strstr( customer_name, "Not Applicable" ) == NULL )
                   ? customer_name
                   : "(none)",
-              ( tech_name && tech_name[0] ) ? tech_name : "(none)" );
+              ( tech_name && tech_name[0] && strstr( tech_name, "Not Applicable" ) == NULL ) ? tech_name
+                                                                                              : "(none)" );
 
-    if( has_colors() )
-    {
-        wattron( header_window, COLOR_PAIR( 2 ) );
-    }
-
-    /* Right-align the info string */
-    {
-        int info_len = strlen( info_right );
-        int info_x = COLS - info_len - 2;
-        if( info_x < 50 )
-            info_x = 50;
-        mvwprintw( header_window, 4, info_x, "%s", info_right );
-    }
+    mvwprintw( header_window, 5, 2, "%.*s", COLS - 4, info_line );
 
     if( has_colors() )
     {
