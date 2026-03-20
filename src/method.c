@@ -1969,16 +1969,16 @@ void* wype_sanitize_crypto_erase( void* ptr )
 void* wype_sanitize_crypto_erase_verify( void* ptr )
 {
     /**
-     * Perform a Sanitize Crypto Erase followed by a full-device read-back
-     * verification pass. The verify reads every sector and checks whether
-     * it is all zeros OR all ones (some drives return 0xFF after crypto
-     * erase). Any non-uniform content is counted as a verify error but
-     * does NOT fail the wipe — the crypto erase itself is the security
-     * measure; the verify only provides evidence for the PDF certificate.
+     * Perform a Sanitize Crypto Erase followed by a PRNG write pass and
+     * a PRNG verification pass.  The crypto erase destroys the encryption
+     * key (the actual security measure).  The subsequent PRNG write +
+     * verify provides deterministic proof for the PDF certificate that
+     * every sector was overwritten and read back successfully.
      */
 
     wype_context_t* c;
     int op_result = -1;
+    ssize_t r;
 
     c = (wype_context_t*) ptr;
 
@@ -1992,8 +1992,8 @@ void* wype_sanitize_crypto_erase_verify( void* ptr )
     c->round_count = 1;
     c->round_working = 1;
     c->round_done = 0;
-    c->round_size = c->device_size;
-    c->pass_count = 1;
+    c->round_size = c->device_size * 2;  /* PRNG write + verify */
+    c->pass_count = 2;
     c->pass_size = c->device_size;
     c->pass_done = 0;
     c->pass_errors = 0;
@@ -2049,24 +2049,74 @@ void* wype_sanitize_crypto_erase_verify( void* ptr )
     }
 
     /*
-     * Step 2: Verify that the device reads back uniformly.
-     * After crypto erase most drives return all zeros, but some return
-     * all 0xFF or other patterns.  We check for zeros first.
+     * Step 2: Seed PRNG and run a PRNG write + verify pass.
      */
-    wype_pattern_t pattern_zero = { 1, "\x00" };
-
-    c->round_done = 0;
-    c->pass_working = 1;
-    c->pass_done = 0;
-    c->pass_type = WYPE_PASS_VERIFY;
-
     wype_log( WYPE_LOG_NOTICE,
-               "Sanitize Crypto Erase completed on %s, starting verification pass.",
+               "Sanitize Crypto Erase completed on %s, starting PRNG overwrite + verify.",
                c->device_name );
 
-    c->result = wype_static_verify( c, &pattern_zero );
+    /* Allocate the PRNG seed buffer. */
+    c->prng_seed.length = WYPE_KNOB_PRNG_STATE_LENGTH;
+    c->prng_seed.s = malloc( c->prng_seed.length );
+
+    if( !c->prng_seed.s )
+    {
+        wype_perror( errno, __FUNCTION__, "malloc" );
+        wype_log( WYPE_LOG_FATAL, "Unable to allocate memory for the prng seed buffer." );
+        c->result = -1;
+        c->wipe_status = 0;
+        time( &c->end_time );
+        return NULL;
+    }
+
+    /* Fill the seed with entropy. */
+    r = wype_read_entropy( c->prng_seed.s, c->prng_seed.length );
+
+    if( r < 0 || r != c->prng_seed.length )
+    {
+        wype_perror( errno, __FUNCTION__, "getrandom" );
+        wype_log( WYPE_LOG_FATAL, "Unable to seed the PRNG (insufficient entropy?)." );
+        c->result = -1;
+        c->prng_seed.length = 0;
+        free( c->prng_seed.s );
+        c->prng_seed.s = NULL;
+        c->wipe_status = 0;
+        time( &c->end_time );
+        return NULL;
+    }
+
+    c->round_done = 0;
+
+    /* Pass 1: PRNG write. */
+    c->pass_working = 1;
+    c->pass_type = WYPE_PASS_WRITE;
+
+    c->result = wype_random_pass( c );
+
+    if( c->result < 0 )
+    {
+        c->pass_type = WYPE_PASS_NONE;
+        c->prng_seed.length = 0;
+        free( c->prng_seed.s );
+        c->prng_seed.s = NULL;
+        c->wipe_status = 0;
+        time( &c->end_time );
+        return NULL;
+    }
+
+    /* Pass 2: PRNG verify. */
+    c->pass_working = 2;
+    c->pass_type = WYPE_PASS_VERIFY;
+    wype_log( WYPE_LOG_NOTICE, "Starting PRNG verification pass for %s.", c->device_name );
+
+    c->result = wype_random_verify( c );
 
     c->pass_type = WYPE_PASS_NONE;
+
+    /* Release the seed buffer. */
+    c->prng_seed.length = 0;
+    free( c->prng_seed.s );
+    c->prng_seed.s = NULL;
 
     c->wipe_status = 0;
     time( &c->end_time );
