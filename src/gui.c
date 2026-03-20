@@ -5954,7 +5954,7 @@ void wype_gui_changelog( void )
         "  - Edit organisation directly from the startup screen",
         "",
         "  Change:",
-        "  - Startup overview always shown (replaces optional PDF preview at start)",
+        "  - Startup overview shown before drive selection when PDF_Preview is enabled (default: ENABLED)",
         "  - Workflow updated: review org/customer before drive selection",
         "",
         "v1.2.0",

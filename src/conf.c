@@ -121,7 +121,7 @@ int wype_conf_init()
      * Add PDF Certificate/Report settings
      */
     wype_conf_populate( "PDF_Certificate.PDF_Enable", "ENABLED" );
-    wype_conf_populate( "PDF_Certificate.PDF_Preview", "DISABLED" );
+    wype_conf_populate( "PDF_Certificate.PDF_Preview", "ENABLED" );
     wype_conf_populate( "PDF_Certificate.PDF_Host_Visibility", "DISABLED" );
     wype_conf_populate( "PDF_Certificate.PDF_tag", "DISABLED" );
     wype_conf_populate( "PDF_Certificate.User_Defined_Tag", "Empty Tag" );

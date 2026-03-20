@@ -748,8 +748,11 @@ int main( int argc, char** argv )
             }
             else
             {
-                /* Show startup overview with org/customer info and customer selection */
-                wype_gui_startup_info();
+                /* Show startup overview with org/customer info and customer selection (if preview enabled) */
+                if( wype_options.PDF_preview_details )
+                {
+                    wype_gui_startup_info();
+                }
 
                 /* Get device selections from the user. */
                 wype_gui_select( &wype_enumerated, &c1 );

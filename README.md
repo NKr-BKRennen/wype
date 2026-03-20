@@ -83,7 +83,7 @@ Selected_Customer: {
 ```
 PDF_Certificate: {
   PDF_Enable = "ENABLED"
-  PDF_Preview = "DISABLED"
+  PDF_Preview = "ENABLED"
   PDF_Host_Visibility = "DISABLED"
   PDF_tag = "DISABLED"
   User_Defined_Tag = "Empty Tag"
@@ -93,7 +93,7 @@ PDF_Certificate: {
 | Setting | Description |
 |---------|-------------|
 | `PDF_Enable` | Create PDF certificates after wipe (`ENABLED`/`DISABLED`) |
-| `PDF_Preview` | Open PDF after creation (desktop only) |
+| `PDF_Preview` | Show organisation/customer overview before drive selection (`ENABLED`/`DISABLED`, default: `ENABLED`) |
 | `PDF_Host_Visibility` | Show system hostname on the certificate |
 | `PDF_tag` | Show user-defined tag on the certificate |
 | `User_Defined_Tag` | Free-text tag for the certificate |

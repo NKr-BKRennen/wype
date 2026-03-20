@@ -9,7 +9,7 @@ Wype v1.3.0 (2026-03-19)
 - Edit organisation directly from the startup screen
 
 **Change:**
-- Startup overview is always shown before drive selection (replaces optional "PDF Preview at Start")
+- Startup overview is now shown before drive selection only when PDF_Preview is enabled (default: ENABLED)
 - Updated workflow: review and confirm org/customer before drive selection
 
 Wype v1.2.0 (2026-03-17)
