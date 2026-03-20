@@ -152,7 +152,7 @@ const char* stats_title = " Status ";
 /* Footer labels. */
 const char* main_window_footer =
     " S=Start  Space=Select  e=EditDisk  c=Settings  h=Help  l=Log  F5=Rescan  ^C=Quit";
-const char* shredos_main_window_footer =
+const char* wypeos_main_window_footer =
     " S=Start  Space=Select  e=EditDisk  c=Settings  h=Help  l=Log  F5=Rescan  f=Font  ^C=Quit";
 char** p_main_window_footer;
 const char* main_window_footer_warning_lower_case_s = "  WARNING: To start the wipe press SHIFT+S (uppercase S)  ";
@@ -177,9 +177,9 @@ const char* selection_footer_preview_prior_to_drive_selection =
 const char* selection_footer_startup = "A=Continue  J=Down K=Up  Enter=Select  Ctrl+C=Quit";
 const char* selection_footer_add_customer = "S=Save J=Down K=Up Space=Select Backspace=Cancel Ctrl+C=Quit";
 const char* selection_footer_add_customer_yes_no = "Save Customer Details Y/N";
-char** p_end_wipe_footer; /* Contains a pointer to either end_wipe_footer or shredos_end_wipe_footer */
+char** p_end_wipe_footer; /* Contains a pointer to either end_wipe_footer or wypeos_end_wipe_footer */
 const char* end_wipe_footer = "B=[Toggle between dark\\blank\\blue screen] Ctrl+C=Quit";
-const char* shredos_end_wipe_footer = "b=[Toggle dark\\blank\\blue screen] f=Font size Ctrl+C=Quit";
+const char* wypeos_end_wipe_footer = "b=[Toggle dark\\blank\\blue screen] f=Font size Ctrl+C=Quit";
 const char* rounds_footer = "Left=Erase Esc=Cancel Ctrl+C=Quit";
 const char* selection_footer_text_entry = "Esc=Cancel Return=Submit Ctrl+C=Quit";
 const char* selection_footer_device_view = "ESC|Backspace=Back Ctrl+C=Quit";
@@ -187,7 +187,7 @@ const char* selection_footer_device_view = "ESC|Backspace=Back Ctrl+C=Quit";
 /* Keeps track of which PRNG category is selected */
 int prng_filter = 0; /* 0 = PRNG, 1 = CSPRNG */
 
-/* Keeps track of whether font is standard or double size (applicable to ShredOS only) */
+/* Keeps track of whether font is standard or double size (applicable to wypeOS only) */
 int toggle_font_flag = 0;
 
 /* The number of lines available in the terminal */
@@ -550,10 +550,10 @@ void wype_gui_init( void )
     keypad( stdscr, TRUE );
 
     /* Initialiase pointer to default end_wipe_footer text */
-    if( access( "/usr/bin/shredos_toggle_font_size.sh", F_OK ) == 0 )
+    if( access( "/usr/bin/wypeOS_toggle_font_size.sh", F_OK ) == 0 )
     {
-        p_end_wipe_footer = (char**) &shredos_end_wipe_footer;
-        p_main_window_footer = (char**) &shredos_main_window_footer;
+        p_end_wipe_footer = (char**) &wypeos_end_wipe_footer;
+        p_main_window_footer = (char**) &wypeos_main_window_footer;
     }
     else
     {
@@ -2092,10 +2092,10 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
 
                 case 'f':
 
-                    /* The f key is only meaningful for ShredOS, it toggles the fontsize */
-                    if( access( "/usr/bin/shredos_toggle_font_size.sh", F_OK ) == 0 )
+                    /* The f key is only meaningful for wypeOS, it toggles the fontsize */
+                    if( access( "/usr/bin/wypeOS_toggle_font_size.sh", F_OK ) == 0 )
                     {
-                        if( system( "/usr/bin/shredos_toggle_font_size.sh > /dev/null 2>&1" ) == 0 )
+                        if( system( "/usr/bin/wypeOS_toggle_font_size.sh > /dev/null 2>&1" ) == 0 )
                         {
                             wype_log( WYPE_LOG_INFO, "Toggle font size" );
                         }
@@ -9278,10 +9278,10 @@ void* wype_gui_status( void* ptr )
 
                 case 'f':
 
-                    /* The f key is only meaningful for ShredOS, it toggles the fontsize */
-                    if( access( "/usr/bin/shredos_toggle_font_size.sh", F_OK ) == 0 )
+                    /* The f key is only meaningful for wypeOS, it toggles the fontsize */
+                    if( access( "/usr/bin/wypeOS_toggle_font_size.sh", F_OK ) == 0 )
                     {
-                        if( system( "/usr/bin/shredos_toggle_font_size.sh > /dev/null 2>&1" ) == 0 )
+                        if( system( "/usr/bin/wypeOS_toggle_font_size.sh > /dev/null 2>&1" ) == 0 )
                         {
                             wype_log( WYPE_LOG_INFO, "Toggle font size" );
                         }

@@ -811,7 +811,7 @@ int create_single_disc_pdf( wype_context_t* ptr )
     char invnr_safe[256] = "";
     struct tm* p;
 
-    struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
+    struct pdf_info info = { .creator = "https://github.com/NKr-BKRennen/wype",
                              .producer = "https://github.com/martijnvanbrummelen/wype",
                              .title = "PDF Disk Erasure Certificate",
                              .author = "Wype",
@@ -874,7 +874,7 @@ void create_grouped_pdfs( wype_context_t** c, int count )
     struct tm* p;
     int i, j;
 
-    struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
+    struct pdf_info info = { .creator = "https://github.com/NKr-BKRennen/wype",
                              .producer = "https://github.com/martijnvanbrummelen/wype",
                              .title = "PDF Disk Erasure Certificate",
                              .author = "Wype",

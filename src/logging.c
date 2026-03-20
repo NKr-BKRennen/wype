@@ -743,7 +743,7 @@ void wype_log_summary( wype_thread_data_ptr_t* ptrx, wype_context_t** ptr, int w
 
     /* Print the pass and verifications table */
 
-    /* IMPORTANT: Keep maximum columns (line length) to 80 characters for use with 80x30 terminals, Shredos, ALT-F2 etc
+    /* IMPORTANT: Keep maximum columns (line length) to 80 characters for use with 80x30 terminals, wypeOS, ALT-F2 etc
      * --------------------------------01234567890123456789012345678901234567890123456789012345678901234567890123456789-*/
     wype_log( WYPE_LOG_NOTIMESTAMP, "" );
     wype_log( WYPE_LOG_NOTIMESTAMP,
@@ -862,7 +862,7 @@ void wype_log_summary( wype_thread_data_ptr_t* ptrx, wype_context_t** ptr, int w
     /* Get the current time. */
     t = time( NULL );
     p = localtime( &t );
-    /* IMPORTANT: Keep maximum columns (line length) to 80 characters for use with 80x30 terminals, Shredos, ALT-F2 etc
+    /* IMPORTANT: Keep maximum columns (line length) to 80 characters for use with 80x30 terminals, wypeOS, ALT-F2 etc
      * --------------------------------01234567890123456789012345678901234567890123456789012345678901234567890123456789-*/
     wype_log( WYPE_LOG_NOTIMESTAMP, "" );
     wype_log( WYPE_LOG_NOTIMESTAMP,

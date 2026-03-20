@@ -657,7 +657,7 @@ int main( int argc, char** argv )
     {
         wype_log( WYPE_LOG_WARNING, "hwmon: Unable to load module drivetemp, temperatures may be unavailable." );
         wype_log( WYPE_LOG_WARNING, "hwmon: It's possible the drivetemp software isn't modular but built-in" );
-        wype_log( WYPE_LOG_WARNING, "hwmon: to the kernel, as is the case with ShredOS.x86_64 in which case" );
+        wype_log( WYPE_LOG_WARNING, "hwmon: to the kernel, as is the case with wypeOS in which case" );
         wype_log( WYPE_LOG_WARNING, "hwmon: the temperatures will actually be available despite this issue." );
     }
     else

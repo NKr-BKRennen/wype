@@ -113,7 +113,7 @@ int create_system_multi_disc_pdf( wype_thread_data_ptr_t* ptrx )
     //    float height;
     //    float page_width;
 
-    struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
+    struct pdf_info info = { .creator = "https://github.com/NKr-BKRennen/wype",
                              .producer = "https://github.com/martijnvanbrummelen/wype",
                              .title = "PDF Disk Erasure Certificate",
                              .author = "Wype",
