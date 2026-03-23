@@ -186,6 +186,10 @@ static cJSON* build_status_json( void )
         if( !c )
             continue;
 
+        /* Skip busy/boot devices — they cannot be wiped */
+        if( c->device_busy )
+            continue;
+
         cJSON* d = cJSON_CreateObject();
 
         /* identification */
