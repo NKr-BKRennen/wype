@@ -134,7 +134,7 @@ static const char* wipe_status_str( int status, const char* txt )
         return "wiping";
     if( txt[0] != '\0' )
         return txt;
-    return "done";
+    return "idle";
 }
 
 /* ------------------------------------------------------------------ */
