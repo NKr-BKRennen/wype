@@ -73,6 +73,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <errno.h>
+#include <ifaddrs.h>
 
 #define WYPE_GUI_PANE 8
 
@@ -90,7 +91,7 @@
 
 /* Options window: width, height, x coorindate, y coordinate. */
 #define WYPE_GUI_OPTIONS_W 44
-#define WYPE_GUI_OPTIONS_H 8
+#define WYPE_GUI_OPTIONS_H 9
 #define WYPE_GUI_OPTIONS_Y 6
 #define WYPE_GUI_OPTIONS_X 0
 
@@ -752,14 +753,38 @@ void wype_gui_create_header_window()
     /* Version + attribution on one line */
     mvwprintw( header_window, 3, 2, "%s - Based on nwipe, rebuilt and modified by Niklas Kronig", bannerplus );
 
-    /* Display current time (right-aligned on version line) */
+    /* Display IP address and current time (right-aligned on header row 0) */
     {
         time_t t = time( NULL );
         struct tm* tm_info = localtime( &t );
         char time_buf[16];
         strftime( time_buf, sizeof( time_buf ), "%H:%M", tm_info );
+
+        /* Get first non-loopback IPv4 address */
+        char ip_buf[INET_ADDRSTRLEN] = "";
+        struct ifaddrs* ifaddr = NULL;
+        if( getifaddrs( &ifaddr ) == 0 )
+        {
+            struct ifaddrs* ifa;
+            for( ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next )
+            {
+                if( ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET )
+                    continue;
+                struct sockaddr_in* sa = (struct sockaddr_in*) ifa->ifa_addr;
+                if( ntohl( sa->sin_addr.s_addr ) == INADDR_LOOPBACK )
+                    continue;
+                inet_ntop( AF_INET, &sa->sin_addr, ip_buf, sizeof( ip_buf ) );
+                break;
+            }
+            freeifaddrs( ifaddr );
+        }
+
         wattroff( header_window, COLOR_PAIR( 2 ) );
         wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+        if( ip_buf[0] != '\0' )
+        {
+            mvwprintw( header_window, 0, COLS - 9 - (int) strlen( ip_buf ) - 3, " %s ", ip_buf );
+        }
         mvwprintw( header_window, 0, COLS - 9, " %s ", time_buf );
         wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
         wattron( header_window, COLOR_PAIR( 2 ) );
@@ -2457,6 +2482,38 @@ void wype_gui_options( void )
         {
             wattron( options_window, COLOR_PAIR( 16 ) | A_BOLD );
             wprintw( options_window, "Enabled" );
+            wattroff( options_window, COLOR_PAIR( 16 ) | A_BOLD );
+        }
+        else
+        {
+            wattron( options_window, COLOR_PAIR( 3 ) );
+            wprintw( options_window, "Disabled" );
+            wattroff( options_window, COLOR_PAIR( 3 ) );
+        }
+    }
+
+    /* Dashboard API status */
+    {
+        extern config_t wype_cfg;
+        const char* api_password = NULL;
+        config_setting_t* dash_setting = config_lookup( &wype_cfg, "Dashboard" );
+
+        wattron( options_window, COLOR_PAIR( 2 ) );
+        mvwprintw( options_window, 7, WYPE_GUI_OPTIONS_ROUNDS_X, "API     " );
+        wattroff( options_window, COLOR_PAIR( 2 ) );
+
+        if( dash_setting != NULL )
+        {
+            config_setting_lookup_string( dash_setting, "API_Password", &api_password );
+        }
+
+        if( api_password != NULL && strlen( api_password ) > 0 )
+        {
+            const char* api_port = "5000";
+            if( dash_setting != NULL )
+                config_setting_lookup_string( dash_setting, "API_Port", &api_port );
+            wattron( options_window, COLOR_PAIR( 16 ) | A_BOLD );
+            wprintw( options_window, ":%s", api_port != NULL ? api_port : "5000" );
             wattroff( options_window, COLOR_PAIR( 16 ) | A_BOLD );
         }
         else

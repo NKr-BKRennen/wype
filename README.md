@@ -12,8 +12,11 @@ Based on nwipe (fork of `dwipe` / Darik's Boot and Nuke) with the following exte
 - **Help & Changelog**: Accessible directly in the GUI (`h` and `l`)
 - **Live Clock**: Current time always visible in the header
 - **Smart Warnings**: Internet/NTP check on startup, SSD/HDD method mismatch detection
+- **Dashboard API**: Built-in HTTP/JSON API for central monitoring via [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard)
+- **IP Address Display**: System IP shown in the header next to the clock
 
 > **For a bootable USB/ISO image** that starts directly into Wype (without an installed OS): [wypeOS](https://github.com/NKr-BKRennen/wypeOS)
+> **For central monitoring of multiple wype nodes**: [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard)
 
 ---
 
@@ -142,6 +145,37 @@ Email_Settings: {
 > Disabled by default. Supports SMTP without authentication (port 25, internal network).
 > Email can be toggled on/off in the GUI settings menu (`c` key). SMTP server details must be edited in `/etc/wype/wype.conf`.
 
+### Dashboard API
+
+Wype includes a built-in HTTP/JSON API server for central monitoring via the [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard). When enabled, other systems can query the wipe status of all disks in real time.
+
+```
+Dashboard:
+{
+  API_Port = "5000";
+  API_Password = "wype";
+};
+```
+
+| Setting | Description |
+|---------|-------------|
+| `API_Port` | HTTP port the API listens on (default: `5000`) |
+| `API_Password` | Shared password for `X-API-Key` authentication (default: `wype`) |
+
+The API password can also be set via environment variable: `WYPE_API_PASSWORD=your-password`
+
+**Endpoints:**
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/health` | Health check |
+| `GET /api/v1/status` | Full JSON status (node info + all disks with progress, throughput, ETA, temperature, errors) |
+
+All requests require the `X-API-Key: <password>` header. The API status (port number or "Disabled") is shown in the options window.
+
+> The API server requires `libmicrohttpd` and `cjson` libraries at compile time. If not available, wype builds without the API (no runtime impact).
+> For central monitoring of multiple wype nodes, see [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard).
+
 ---
 
 ## Installation on Debian 13 (Trixie)
@@ -169,8 +203,12 @@ sudo apt install -y \
   dmidecode \
   coreutils \
   smartmontools \
-  hdparm
+  hdparm \
+  libmicrohttpd-dev \
+  libcjson-dev
 ```
+
+> `libmicrohttpd-dev` and `libcjson-dev` are optional — they enable the Dashboard API server. Without them, wype builds and runs normally but without the API.
 
 ### 3. Clone repository and compile
 
@@ -240,7 +278,8 @@ Everything in one block for a fresh Debian 13 installation:
 sudo apt update && sudo apt install -y \
   build-essential pkg-config automake autoconf libtool git \
   libncurses-dev libparted-dev libconfig-dev libconfig++-dev \
-  dmidecode coreutils smartmontools hdparm && \
+  dmidecode coreutils smartmontools hdparm \
+  libmicrohttpd-dev libcjson-dev && \
 cd /root && \
 git clone https://github.com/NKr-BKRennen/wype.git && \
 cd wype && chmod +x build.sh autogen.sh && ./build.sh && \
@@ -352,6 +391,9 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ### v1.4.0 (2026-03-23)
 
 **Add:**
+- Dashboard API: built-in HTTP/JSON API server (libmicrohttpd + cJSON) for central monitoring via [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard)
+- IP address display in the header next to the clock — always visible
+- API status display in the options window (port number or "Disabled")
 - Live clock display (HH:MM) in the header — always visible during device selection and wipe
 - Internet connectivity check on startup: warns if NTP time sync is unavailable
 - SSD/HDD method mismatch warning when starting a wipe (SSDs with software methods / HDDs with firmware methods)
