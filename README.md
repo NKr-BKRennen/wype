@@ -154,6 +154,7 @@ Dashboard:
 {
   API_Port = "5000";
   API_Password = "wype";
+  Dashboard_URL = "";
 };
 ```
 
@@ -161,8 +162,11 @@ Dashboard:
 |---------|-------------|
 | `API_Port` | HTTP port the API listens on (default: `5000`) |
 | `API_Password` | Shared password for `X-API-Key` authentication (default: `wype`) |
+| `Dashboard_URL` | `host:port` of the central dashboard (empty = self-registration disabled) |
 
 The API password can also be set via environment variable: `WYPE_API_PASSWORD=your-password`
+
+**Self-Registration:** When `Dashboard_URL` is set (e.g. `192.168.1.5:8080`), wype automatically registers itself with the central dashboard every 30 seconds. New nodes appear as "Pending" in the dashboard and must be approved by an admin before they are polled for status. This replaces the old subnet-scanning approach.
 
 **Endpoints:**
 
@@ -171,7 +175,7 @@ The API password can also be set via environment variable: `WYPE_API_PASSWORD=yo
 | `GET /api/v1/health` | Health check |
 | `GET /api/v1/status` | Full JSON status (node info + all disks with progress, throughput, ETA, temperature, errors) |
 
-All requests require the `X-API-Key: <password>` header. The API status (port number or "Disabled") is shown in the options window.
+All requests require the `X-API-Key: <password>` header. The API status ("Enabled" or "Disabled") is shown in the options window.
 
 > The API server requires `libmicrohttpd` and `cjson` libraries at compile time. If not available, wype builds without the API (no runtime impact).
 > For central monitoring of multiple wype nodes, see [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard).

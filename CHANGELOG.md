@@ -1,6 +1,18 @@
 RELEASE NOTES
 =============
 
+Wype v1.5.0 (2026-03-23)
+-----------------------
+**Add:**
+- Dashboard self-registration: nodes register themselves with the central dashboard every 30s via `Dashboard_URL` config setting — replaces subnet scanning
+- `Dashboard_URL` config option in wype.conf (empty = disabled)
+- Proper cursor navigation in hostname/inventory editor: arrow keys move cursor, insert at position, Home/End, Delete key
+- `setup.sh` option 7: install all build dependencies automatically
+
+**Change:**
+- API status in options window now shows "Enabled" instead of the port number
+- API returns "idle" instead of "done" for disks that haven't been wiped yet
+
 Wype v1.4.0 (2026-03-23)
 -----------------------
 **Add:**
