@@ -65,6 +65,7 @@ enable_autostart() {
 
 $MARKER
 if [[ "\$(tty)" == "/dev/tty1" ]]; then
+    dmesg -n 1
     wype
 fi
 PROFILE
