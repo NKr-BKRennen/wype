@@ -39,4 +39,10 @@ int wype_api_server_start( wype_context_t*** contexts_ptr,
  */
 void wype_api_server_stop( void );
 
+/**
+ * Check whether the API server is currently running.
+ * @return 1 if running, 0 otherwise
+ */
+int wype_api_server_is_running( void );
+
 #endif /* API_SERVER_H_ */

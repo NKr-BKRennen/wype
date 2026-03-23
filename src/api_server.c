@@ -379,6 +379,11 @@ void wype_api_server_stop( void )
     }
 }
 
+int wype_api_server_is_running( void )
+{
+    return api_daemon != NULL ? 1 : 0;
+}
+
 #else /* !HAVE_API_SERVER — stub implementations */
 
 int wype_api_server_start( wype_context_t*** contexts_ptr,
@@ -397,6 +402,11 @@ int wype_api_server_start( wype_context_t*** contexts_ptr,
 
 void wype_api_server_stop( void )
 {
+}
+
+int wype_api_server_is_running( void )
+{
+    return 0;
 }
 
 #endif /* HAVE_API_SERVER */

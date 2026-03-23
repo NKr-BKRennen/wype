@@ -67,6 +67,7 @@
 #include "device.h"
 #include "unistd.h"
 #include "cpu_features.h"
+#include "api_server.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -2495,21 +2496,15 @@ void wype_gui_options( void )
     /* Dashboard API status */
     {
         extern config_t wype_cfg;
-        const char* api_password = NULL;
-        config_setting_t* dash_setting = config_lookup( &wype_cfg, "Dashboard" );
 
         wattron( options_window, COLOR_PAIR( 2 ) );
         mvwprintw( options_window, 7, WYPE_GUI_OPTIONS_ROUNDS_X, "API     " );
         wattroff( options_window, COLOR_PAIR( 2 ) );
 
-        if( dash_setting != NULL )
-        {
-            config_setting_lookup_string( dash_setting, "API_Password", &api_password );
-        }
-
-        if( api_password != NULL && strlen( api_password ) > 0 )
+        if( wype_api_server_is_running() )
         {
             const char* api_port = "5000";
+            config_setting_t* dash_setting = config_lookup( &wype_cfg, "Dashboard" );
             if( dash_setting != NULL )
                 config_setting_lookup_string( dash_setting, "API_Port", &api_port );
             wattron( options_window, COLOR_PAIR( 16 ) | A_BOLD );

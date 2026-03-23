@@ -14,5 +14,8 @@ git pull origin main
 
 echo ""
 
+# Force reconfigure so that new/removed libraries are detected
+rm -f Makefile
+
 # Run build.sh (asks at the end whether to start wype)
 ./build.sh
