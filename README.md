@@ -10,6 +10,8 @@ Based on nwipe (fork of `dwipe` / Darik's Boot and Nuke) with the following exte
 - **Per-Disk Metadata**: Hostname and Inventory Number per disk directly editable in the GUI
 - **Email Delivery**: Batch delivery of all PDF certificates via SMTP after confirmation
 - **Help & Changelog**: Accessible directly in the GUI (`h` and `l`)
+- **Live Clock**: Current time always visible in the header
+- **Smart Warnings**: Internet/NTP check on startup, SSD/HDD method mismatch detection
 
 > **For a bootable USB/ISO image** that starts directly into Wype (without an installed OS): [wypeOS](https://github.com/NKr-BKRennen/wypeOS)
 
@@ -21,13 +23,14 @@ This is what a typical wipe process with Wype looks like:
 
 1. **Start Wype** → `sudo wype`
 2. **Startup Overview** → review organisation and customer details → select or change customer → press `A` to continue
-3. **Select Wipe Method** → press `m` → e.g. "DoD 5220.22-M" for HDDs or "Secure Erase / Sanitize >" for SSDs
-4. **Adjust options** (optional) → `v` Verification, `r` Rounds, `p` PRNG, `b` Blanking
-5. **Select disks** → Arrow keys + `Space` (or `Ctrl+A` for all)
-6. **Enter metadata** → press `e` on each disk → enter Hostname and Inventory Number
-7. **Start wipe** → `S` (Shift+S) — Wype automatically warns if metadata is missing
-8. **Wait** → Progress is displayed live. If email delivery is active, a notification is sent when all wipes are finished.
-9. **Confirm** → press `Enter` → PDFs are created and sent via email
+3. **Internet Check** → if no internet is available, Wype warns about NTP and shows the current system time for verification
+4. **Select Wipe Method** → press `m` → e.g. "DoD 5220.22-M" for HDDs or "Secure Erase / Sanitize >" for SSDs
+5. **Adjust options** (optional) → `v` Verification, `r` Rounds, `p` PRNG, `b` Blanking
+6. **Select disks** → Arrow keys + `Space` (or `Ctrl+A` for all)
+7. **Enter metadata** → press `e` on each disk → enter Hostname and Inventory Number
+8. **Start wipe** → `S` (Shift+S) — Wype automatically warns if metadata is missing and if the wipe method doesn't match the drive type (SSD/HDD)
+9. **Wait** → Progress is displayed live. The current time is shown in the header. If email delivery is active, a notification is sent when all wipes are finished.
+10. **Confirm** → press `Enter` → PDFs are created and sent via email
 
 > **Tip:** `h` shows a Help page with all key bindings at any time. `l` shows the Changelog.
 
@@ -345,6 +348,18 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ---
 
 ## Changelog
+
+### v1.4.0 (2026-03-23)
+
+**Add:**
+- Live clock display (HH:MM) in the header — always visible during device selection and wipe
+- Internet connectivity check on startup: warns if NTP time sync is unavailable
+- SSD/HDD method mismatch warning when starting a wipe (SSDs with software methods / HDDs with firmware methods)
+- Kernel console message suppression in autostart to prevent ATA errors from overwriting the UI
+
+**Fix:**
+- Timezone forced to `Europe/Berlin` for correct certificate timestamps
+- Internet check with dual DNS fallback (Google + Cloudflare)
 
 ### v1.3.0 (2026-03-20)
 

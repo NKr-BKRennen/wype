@@ -304,6 +304,10 @@ int main( int argc, char** argv )
     /* The generic result buffer. */
     int r;
 
+    /* Ensure timezone is set to Europe/Berlin for correct certificate timestamps */
+    setenv( "TZ", "Europe/Berlin", 1 );
+    tzset();
+
     /* Initialise the termintaion signal, 1=terminate wype */
     terminate_signal = 0;
 
@@ -753,6 +757,9 @@ int main( int argc, char** argv )
                 {
                     wype_gui_startup_info();
                 }
+
+                /* Check for internet connectivity and warn about NTP/time if offline */
+                wype_gui_check_internet_and_warn();
 
                 /* Get device selections from the user. */
                 wype_gui_select( &wype_enumerated, &c1 );

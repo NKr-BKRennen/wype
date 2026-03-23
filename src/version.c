@@ -4,7 +4,7 @@
  * used by configure to dynamically assign those values
  * to documentation files.
  */
-const char* version_string = "1.3.0";
+const char* version_string = "1.4.0";
 const char* program_name = "wype";
 const char* author_name = "NKr-BKRennen";
 const char* email_address = "niklas.kronig@ddz.de";
@@ -14,4 +14,4 @@ and others. Rebuilt and modified by Niklas Kronig.\n\
 This is free software; see the source for copying conditions.\n\
 There is NO warranty; not even for MERCHANTABILITY or FITNESS\n\
 FOR A PARTICULAR PURPOSE.\n";
-const char* banner = "Wype 1.3.0";
+const char* banner = "Wype 1.4.0";

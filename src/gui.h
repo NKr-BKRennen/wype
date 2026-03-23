@@ -117,6 +117,7 @@ char* str_truncate( int, int, const char*, char*, int );  // Truncate string bas
  *  @Return void
  */
 void wype_gui_set_date_time( void );
+void wype_gui_check_internet_and_warn( void );  // Warn if no internet for NTP time sync
 
 int spinner( wype_context_t** ptr, int );  // Return the next spinner character
 void temp1_flash( wype_context_t* );  // toggles term1_flash_status, which flashes the temperature

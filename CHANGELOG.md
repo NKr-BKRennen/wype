@@ -1,6 +1,21 @@
 RELEASE NOTES
 =============
 
+Wype v1.4.0 (2026-03-23)
+-----------------------
+**Add:**
+- Live clock display (HH:MM) in the top-right corner of the header — visible on both the device selection and wipe status screens
+- Internet connectivity check on startup: warns if no internet is available for NTP time synchronization, displays current system time for manual verification, and points to Settings > Set Date/Time
+- SSD/HDD method mismatch warning when starting a wipe:
+  - SSDs with software overwrite methods: warns that data may remain due to wear leveling
+  - HDDs with firmware erase methods: warns that the erase may fail
+  - Both warnings can be acknowledged or cancelled
+- Kernel console message suppression (`dmesg -n 1`) in the autostart script to prevent ATA errors from overwriting the ncurses UI during long wipe sessions
+
+**Fix:**
+- Timezone forced to Europe/Berlin at startup for correct certificate timestamps regardless of system configuration
+- Internet check uses dual DNS fallback (Google 8.8.8.8 + Cloudflare 1.1.1.1)
+
 Wype v1.3.0 (2026-03-20)
 -----------------------
 **Add:**

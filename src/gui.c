@@ -67,6 +67,12 @@
 #include "device.h"
 #include "unistd.h"
 #include "cpu_features.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <errno.h>
 
 #define WYPE_GUI_PANE 8
 
@@ -746,6 +752,19 @@ void wype_gui_create_header_window()
     /* Version + attribution on one line */
     mvwprintw( header_window, 3, 2, "%s - Based on nwipe, rebuilt and modified by Niklas Kronig", bannerplus );
 
+    /* Display current time (right-aligned on version line) */
+    {
+        time_t t = time( NULL );
+        struct tm* tm_info = localtime( &t );
+        char time_buf[16];
+        strftime( time_buf, sizeof( time_buf ), "%H:%M", tm_info );
+        wattroff( header_window, COLOR_PAIR( 2 ) );
+        wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+        mvwprintw( header_window, 0, COLS - 9, " %s ", time_buf );
+        wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+        wattron( header_window, COLOR_PAIR( 2 ) );
+    }
+
     /* Horizontal separator line */
     mvwhline( header_window, 4, 2, ACS_HLINE, COLS - 4 );
 
@@ -1106,6 +1125,96 @@ void wype_gui_create_all_windows_on_terminal_resize( int force_creation, const c
         update_panels();
         doupdate();
     }
+}
+
+static int wype_try_connect( const char* ip, int timeout_ms )
+{
+    /* Try to connect to the given IP on port 53 (DNS) with timeout */
+    int sock = socket( AF_INET, SOCK_STREAM, 0 );
+    if( sock < 0 )
+        return 0;
+
+    struct sockaddr_in addr;
+    memset( &addr, 0, sizeof( addr ) );
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons( 53 );
+    inet_pton( AF_INET, ip, &addr.sin_addr );
+
+    /* Set non-blocking */
+    int flags = fcntl( sock, F_GETFL, 0 );
+    fcntl( sock, F_SETFL, flags | O_NONBLOCK );
+
+    int ret = connect( sock, (struct sockaddr*) &addr, sizeof( addr ) );
+    if( ret == 0 )
+    {
+        close( sock );
+        return 1;
+    }
+
+    if( errno != EINPROGRESS )
+    {
+        close( sock );
+        return 0;
+    }
+
+    struct pollfd pfd;
+    pfd.fd = sock;
+    pfd.events = POLLOUT;
+    ret = poll( &pfd, 1, timeout_ms );
+
+    close( sock );
+    return ( ret > 0 && ( pfd.revents & POLLOUT ) );
+}
+
+static int wype_check_internet( void )
+{
+    /* Try Google DNS first, then Cloudflare DNS as fallback */
+    if( wype_try_connect( "8.8.8.8", 2000 ) )
+        return 1;
+    return wype_try_connect( "1.1.1.1", 2000 );
+}
+
+void wype_gui_check_internet_and_warn( void )
+{
+    if( wype_check_internet() )
+        return; /* Internet available, NTP should work */
+
+    /* Show warning */
+    werase( main_window );
+    box( main_window, 0, 0 );
+    wype_gui_title( main_window, " No Internet Connection " );
+
+    int yy = 3;
+    wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+    mvwprintw( main_window, yy++, 3, "WARNING: No internet connection detected!" );
+    wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+    yy++;
+    mvwprintw( main_window, yy++, 3, "The system clock cannot be synchronized via NTP." );
+    mvwprintw( main_window, yy++, 3, "The current time on this system is:" );
+    yy++;
+
+    time_t t = time( NULL );
+    struct tm* tm_info = localtime( &t );
+    char time_buf[64];
+    strftime( time_buf, sizeof( time_buf ), "%Y-%m-%d %H:%M:%S", tm_info );
+    wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+    mvwprintw( main_window, yy++, 3, "    %s", time_buf );
+    wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+    yy++;
+    mvwprintw( main_window, yy++, 3, "Please verify that this time is correct." );
+    mvwprintw( main_window, yy++, 3, "An incorrect time will result in wrong timestamps" );
+    mvwprintw( main_window, yy++, 3, "on the wipe certificates." );
+    yy++;
+    mvwprintw( main_window, yy++, 3, "You can set the time manually in:" );
+    mvwprintw( main_window, yy++, 3, "  Settings (C) > Set Date/Time" );
+    yy++;
+    wattron( main_window, COLOR_PAIR( 16 ) | A_BOLD );
+    mvwprintw( main_window, yy++, 3, "Press any key to continue..." );
+    wattroff( main_window, COLOR_PAIR( 16 ) | A_BOLD );
+
+    wrefresh( main_window );
+    timeout( -1 );
+    getch();
 }
 
 void wype_gui_select( int* p_count, wype_context_t*** p_c )
@@ -1485,6 +1594,18 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
 
         /* Refresh the window. */
         wnoutrefresh( main_window );
+
+        /* Update clock display in header */
+        {
+            time_t t = time( NULL );
+            struct tm* tm_info = localtime( &t );
+            char time_buf[16];
+            strftime( time_buf, sizeof( time_buf ), "%H:%M", tm_info );
+            wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+            mvwprintw( header_window, 0, COLS - 9, " %s ", time_buf );
+            wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+            wnoutrefresh( header_window );
+        }
 
         /* Output to physical screen */
         doupdate();
@@ -2013,7 +2134,106 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
 
                             if( metadata_ok )
                             {
-                                startwipe = 1;
+                                /* Check for SSD/HDD method mismatch */
+                                int method_mismatch_ok = 1;
+                                int is_firmware_method = ( wype_options.method == &wype_secure_erase
+                                    || wype_options.method == &wype_secure_erase_prng_verify
+                                    || wype_options.method == &wype_sanitize_crypto_erase
+                                    || wype_options.method == &wype_sanitize_crypto_erase_verify
+                                    || wype_options.method == &wype_sanitize_block_erase
+                                    || wype_options.method == &wype_sanitize_overwrite );
+                                int is_verify_method = ( wype_options.method == &wype_verify_zero
+                                    || wype_options.method == &wype_verify_one );
+
+                                if( !is_verify_method )
+                                {
+                                    int has_ssd_with_hdd_method = 0;
+                                    int has_hdd_with_ssd_method = 0;
+
+                                    for( i = 0; i < count; i++ )
+                                    {
+                                        if( c[i]->select != WYPE_SELECT_TRUE )
+                                            continue;
+                                        if( c[i]->device_is_ssd && !is_firmware_method )
+                                            has_ssd_with_hdd_method = 1;
+                                        if( !c[i]->device_is_ssd && is_firmware_method )
+                                            has_hdd_with_ssd_method = 1;
+                                    }
+
+                                    if( has_ssd_with_hdd_method || has_hdd_with_ssd_method )
+                                    {
+                                        werase( main_window );
+                                        box( main_window, 0, 0 );
+                                        wype_gui_title( main_window, " Method Mismatch Warning " );
+
+                                        int wy = 3;
+                                        if( has_ssd_with_hdd_method )
+                                        {
+                                            wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "WARNING: Software overwrite method selected for SSD(s)!" );
+                                            wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "Software overwrite methods (e.g. PRNG, DoD, Gutmann) are" );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "NOT RECOMMENDED for SSDs due to wear leveling and" );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "overprovisioning. Data may remain in areas not accessible" );
+                                            mvwprintw( main_window, wy++, 3, "by software writes." );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "Recommended: Use Secure Erase or Sanitize commands" );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "for SSDs (M > Secure Erase / Sanitize)." );
+                                        }
+                                        if( has_hdd_with_ssd_method )
+                                        {
+                                            if( has_ssd_with_hdd_method )
+                                                wy++;
+                                            wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "WARNING: Firmware erase method selected for HDD(s)!" );
+                                            wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "Firmware erase commands (Secure Erase, Sanitize) may" );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "not be supported by traditional hard drives and could" );
+                                            mvwprintw( main_window, wy++, 3, "FAIL during the wipe process." );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "Recommended: Use a software overwrite method for HDDs" );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "(e.g. PRNG Stream, DoD 5220.22-M)." );
+                                        }
+
+                                        wy += 2;
+                                        wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+                                        mvwprintw( main_window, wy++, 3, "Enter = Continue anyway" );
+                                        mvwprintw( main_window, wy++, 3, "ESC   = Cancel" );
+                                        wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+                                        wrefresh( main_window );
+
+                                        int confirm;
+                                        do
+                                        {
+                                            timeout( -1 );
+                                            confirm = getch();
+                                        } while( confirm != 10 && confirm != 27 );
+
+                                        if( confirm == 27 )
+                                        {
+                                            method_mismatch_ok = 0;
+                                        }
+                                    }
+                                }
+
+                                if( method_mismatch_ok )
+                                {
+                                    startwipe = 1;
+                                }
                             }
                         }
                     }
@@ -9689,6 +9909,18 @@ void* wype_gui_status( void* ptr )
 
                 /* Refresh internal representation of stats window */
                 wnoutrefresh( stats_window );
+
+                /* Update clock display in header */
+                {
+                    time_t clock_t_now = time( NULL );
+                    struct tm* clock_tm = localtime( &clock_t_now );
+                    char clock_buf[16];
+                    strftime( clock_buf, sizeof( clock_buf ), "%H:%M", clock_tm );
+                    wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+                    mvwprintw( header_window, 0, COLS - 9, " %s ", clock_buf );
+                    wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
+                    wnoutrefresh( header_window );
+                }
 
                 /* Output all windows to screen */
                 doupdate();
