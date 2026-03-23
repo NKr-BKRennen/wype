@@ -173,6 +173,50 @@ static cJSON* build_status_json( void )
         cJSON_AddNumberToObject( node, "devices_selected", api_misc->wype_selected );
     }
 
+    /* system info (Linux /proc – absent fields are simply omitted) */
+    {
+        FILE* f;
+        double up = -1;
+        f = fopen( "/proc/uptime", "r" );
+        if( f )
+        {
+            if( fscanf( f, "%lf", &up ) != 1 )
+                up = -1;
+            fclose( f );
+        }
+        if( up >= 0 )
+            cJSON_AddNumberToObject( node, "uptime_seconds", up );
+
+        double load1 = -1;
+        f = fopen( "/proc/loadavg", "r" );
+        if( f )
+        {
+            if( fscanf( f, "%lf", &load1 ) != 1 )
+                load1 = -1;
+            fclose( f );
+        }
+        if( load1 >= 0 )
+            cJSON_AddNumberToObject( node, "load_average_1m", load1 );
+
+        long mt = 0, ma = 0;
+        f = fopen( "/proc/meminfo", "r" );
+        if( f )
+        {
+            char ln[256];
+            while( fgets( ln, sizeof( ln ), f ) )
+            {
+                sscanf( ln, "MemTotal: %ld kB", &mt );
+                sscanf( ln, "MemAvailable: %ld kB", &ma );
+            }
+            fclose( f );
+        }
+        if( mt > 0 )
+        {
+            cJSON_AddNumberToObject( node, "memory_total_mb", (double) ( mt / 1024 ) );
+            cJSON_AddNumberToObject( node, "memory_used_mb", (double) ( ( mt - ma ) / 1024 ) );
+        }
+    }
+
     cJSON_AddItemToObject( root, "node", node );
 
     /* ---- disks ---- */
