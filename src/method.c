@@ -123,7 +123,7 @@ const char* wype_bmb_label = "BMB21-2019";
 const char* wype_secure_erase_label = "Secure Erase (ATA/NVMe)";
 const char* wype_secure_erase_prng_verify_label = "Secure Erase + PRNG + Verify";
 const char* wype_sanitize_crypto_erase_label = "Sanitize Crypto Erase (ATA/SCSI/NVMe)";
-const char* wype_sanitize_crypto_erase_verify_label = "Sanitize Crypto Erase + Verify";
+const char* wype_sanitize_crypto_erase_verify_label = "Sanitize Crypto Erase + PRNG + Verify";
 const char* wype_sanitize_block_erase_label = "Sanitize Block Erase (ATA/SCSI/NVMe)";
 const char* wype_sanitize_overwrite_label = "Sanitize Overwrite (ATA/SCSI/NVMe)";
 

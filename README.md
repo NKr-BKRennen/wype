@@ -326,7 +326,7 @@ These methods operate at the firmware level and reach hidden/reserved SSD areas.
 | Secure Erase | `--method=secure_erase` | ATA/NVMe Secure Erase + zero verification |
 | Secure Erase + PRNG | `--method=secure_erase_prng` | Secure Erase + PRNG pass + verification |
 | Sanitize Crypto Erase | `--method=sanitize_crypto` | Destroys the encryption key — **recommended for SSDs** |
-| Sanitize Crypto Erase + Verify | `--method=sanitize_crypto_verify` | Crypto Erase + full read-back verification for PDF proof |
+| Sanitize Crypto Erase + PRNG + Verify | `--method=sanitize_crypto_verify` | Crypto Erase + full read-back verification for PDF proof |
 | Sanitize Block Erase | `--method=sanitize_block` | Block Erase (NVMe/SCSI) |
 | Sanitize Overwrite | `--method=sanitize_overwrite` | Sanitize Overwrite (SCSI) |
 
@@ -459,7 +459,7 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ### v1.2.0 (2026-03-17)
 
 **Add:**
-- Sanitize Crypto Erase + Verify: new wipe method — crypto erase with full read-back verification for PDF certificate proof
+- Sanitize Crypto Erase + PRNG + Verify: new wipe method — crypto erase with full read-back verification for PDF certificate proof
 - Unified settings menu (`c` key) with arrow navigation (method, PRNG, Verification, Rounds, Blanking, Write Direction, Organization & PDF, Email)
 - Disk metadata editor (`e` key): Hostname + Inventory Number in a single dialog with Tab switching
 - Help page (`h` key) with all key bindings, explanations and workflow

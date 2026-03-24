@@ -113,7 +113,7 @@ void display_help()
     BHCYN \
     "        sanitize_crypto" reset "        -  Sanitize Crypto Erase (destroy encryption key)\n" \
     BHCYN \
-    "        sanitize_crypto_verify" reset " -  Sanitize Crypto Erase + read-back verify\n" \
+    "        sanitize_crypto_verify" reset " -  Sanitize Crypto Erase + PRNG + verify\n" \
     BHCYN \
     "        sanitize_block" reset "         -  Sanitize Block Erase (NVMe/SCSI)\n" \
     BHCYN \

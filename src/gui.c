@@ -92,7 +92,7 @@
 
 /* Options window: width, height, x coorindate, y coordinate. */
 #define WYPE_GUI_OPTIONS_W 44
-#define WYPE_GUI_OPTIONS_H 9
+#define WYPE_GUI_OPTIONS_H 8
 #define WYPE_GUI_OPTIONS_Y 6
 #define WYPE_GUI_OPTIONS_X 0
 
@@ -126,6 +126,8 @@
 #define WYPE_GUI_STATS_THROUGHPUT_X 1
 #define WYPE_GUI_STATS_ERRORS_Y 5
 #define WYPE_GUI_STATS_ERRORS_X 1
+#define WYPE_GUI_STATS_MISC_Y 6
+#define WYPE_GUI_STATS_MISC_X 1
 #define WYPE_GUI_STATS_TAB 17
 
 /* Select window: width, height, x coordinate, y coordinate. */
@@ -754,42 +756,7 @@ void wype_gui_create_header_window()
     /* Version + attribution on one line */
     mvwprintw( header_window, 3, 2, "%s - Based on nwipe, rebuilt and modified by Niklas Kronig", bannerplus );
 
-    /* Display IP address and current time (right-aligned on header row 0) */
-    {
-        time_t t = time( NULL );
-        struct tm* tm_info = localtime( &t );
-        char time_buf[16];
-        strftime( time_buf, sizeof( time_buf ), "%H:%M", tm_info );
-
-        /* Get first non-loopback IPv4 address */
-        char ip_buf[INET_ADDRSTRLEN] = "";
-        struct ifaddrs* ifaddr = NULL;
-        if( getifaddrs( &ifaddr ) == 0 )
-        {
-            struct ifaddrs* ifa;
-            for( ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next )
-            {
-                if( ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET )
-                    continue;
-                struct sockaddr_in* sa = (struct sockaddr_in*) ifa->ifa_addr;
-                if( ntohl( sa->sin_addr.s_addr ) == INADDR_LOOPBACK )
-                    continue;
-                inet_ntop( AF_INET, &sa->sin_addr, ip_buf, sizeof( ip_buf ) );
-                break;
-            }
-            freeifaddrs( ifaddr );
-        }
-
-        wattroff( header_window, COLOR_PAIR( 2 ) );
-        wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-        if( ip_buf[0] != '\0' )
-        {
-            mvwprintw( header_window, 0, COLS - 9 - (int) strlen( ip_buf ) - 3, " %s ", ip_buf );
-        }
-        mvwprintw( header_window, 0, COLS - 9, " %s ", time_buf );
-        wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-        wattron( header_window, COLOR_PAIR( 2 ) );
-    }
+    /* IP and time now displayed in the stats window instead of the header */
 
     /* Horizontal separator line */
     mvwhline( header_window, 4, 2, ACS_HLINE, COLS - 4 );
@@ -1110,6 +1077,7 @@ void wype_gui_create_stats_window()
     mvwprintw( stats_window, WYPE_GUI_STATS_LOAD_Y, WYPE_GUI_STATS_LOAD_X, "Load Averages  " );
     mvwprintw( stats_window, WYPE_GUI_STATS_THROUGHPUT_Y, WYPE_GUI_STATS_THROUGHPUT_X, "Throughput     " );
     mvwprintw( stats_window, WYPE_GUI_STATS_ERRORS_Y, WYPE_GUI_STATS_ERRORS_X, "Errors         " );
+    mvwprintw( stats_window, WYPE_GUI_STATS_MISC_Y, WYPE_GUI_STATS_MISC_X, "IP / Time      " );
     wattroff( stats_window, COLOR_PAIR( 2 ) );
 
 } /* wype_gui_create_stats_window */
@@ -3925,7 +3893,7 @@ void wype_gui_method( void )
                 mvwprintw( main_window, 8, tab2, " - ATA/NVMe Secure Erase                          " );
                 mvwprintw( main_window, 9, tab2, " - Secure Erase + PRNG verification               " );
                 mvwprintw( main_window, 10, tab2, " - Sanitize Crypto Erase                         " );
-                mvwprintw( main_window, 11, tab2, " - Sanitize Crypto Erase + Verify                " );
+                mvwprintw( main_window, 11, tab2, " - Sanitize Crypto Erase + PRNG + Verify                " );
                 mvwprintw( main_window, 12, tab2, "Press ENTER to view these options.                " );
                 break;
         }
@@ -6340,7 +6308,7 @@ void wype_gui_changelog( void )
         "  - Batch email: all PDFs in one email after confirmation",
         "  - Notification email when wipe is done (before Enter confirmation)",
         "  - Local PDFs deleted after successful email delivery",
-        "  - Sanitize Crypto Erase + Verify: crypto erase with read-back verification",
+        "  - Sanitize Crypto Erase + PRNG + Verify: crypto erase with read-back verification",
         "  - Drive rescan (F5): hot-plug detection without restart",
         "  - IN USE devices can no longer be edited or selected",
         "",
@@ -10077,6 +10045,40 @@ void* wype_gui_status( void* ptr )
                            wype_misc_thread_data->errors );
                 wattroff( stats_window, COLOR_PAIR( 3 ) | A_BOLD );
 
+                /* Print IP address and current time in stats window */
+                {
+                    time_t clock_t_now = time( NULL );
+                    struct tm* clock_tm = localtime( &clock_t_now );
+                    char clock_buf[16];
+                    strftime( clock_buf, sizeof( clock_buf ), "%H:%M", clock_tm );
+
+                    char ip_buf[INET_ADDRSTRLEN] = "";
+                    struct ifaddrs* ifaddr = NULL;
+                    if( getifaddrs( &ifaddr ) == 0 )
+                    {
+                        struct ifaddrs* ifa;
+                        for( ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next )
+                        {
+                            if( ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET )
+                                continue;
+                            struct sockaddr_in* sa = (struct sockaddr_in*) ifa->ifa_addr;
+                            if( ntohl( sa->sin_addr.s_addr ) == INADDR_LOOPBACK )
+                                continue;
+                            inet_ntop( AF_INET, &sa->sin_addr, ip_buf, sizeof( ip_buf ) );
+                            break;
+                        }
+                        freeifaddrs( ifaddr );
+                    }
+
+                    wattron( stats_window, COLOR_PAIR( 2 ) );
+                    mvwprintw( stats_window, WYPE_GUI_STATS_MISC_Y, WYPE_GUI_STATS_MISC_X, "IP / Time" );
+                    wattroff( stats_window, COLOR_PAIR( 2 ) );
+                    wattron( stats_window, A_BOLD );
+                    mvwprintw( stats_window, WYPE_GUI_STATS_MISC_Y, WYPE_GUI_STATS_TAB, "%s  %s",
+                               ip_buf[0] ? ip_buf : "---", clock_buf );
+                    wattroff( stats_window, A_BOLD );
+                }
+
                 /* Add a border. */
                 box( stats_window, 0, 0 );
 
@@ -10085,18 +10087,7 @@ void* wype_gui_status( void* ptr )
 
                 /* Refresh internal representation of stats window */
                 wnoutrefresh( stats_window );
-
-                /* Update clock display in header */
-                {
-                    time_t clock_t_now = time( NULL );
-                    struct tm* clock_tm = localtime( &clock_t_now );
-                    char clock_buf[16];
-                    strftime( clock_buf, sizeof( clock_buf ), "%H:%M", clock_tm );
-                    wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-                    mvwprintw( header_window, 0, COLS - 9, " %s ", clock_buf );
-                    wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-                    wnoutrefresh( header_window );
-                }
+                wnoutrefresh( header_window );
 
                 /* Output all windows to screen */
                 doupdate();
