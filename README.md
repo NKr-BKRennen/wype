@@ -399,6 +399,17 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 
 ## Changelog
 
+### v1.8.1 (2026-03-24)
+
+**Add:**
+- GitHub Actions CI workflow for automated build verification
+- Hostname, inventory number and comment shown per disk in summary email
+
+**Fix:**
+- IP address and clock now visible from startup (not only during wipe)
+- API status (Enabled/Disabled) visible again in options window
+- Removed stale files from repo (old CI, duplicate images, obsolete scripts)
+
 ### v1.8.0 (2026-03-24)
 
 **Add:**

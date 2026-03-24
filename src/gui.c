@@ -92,7 +92,7 @@
 
 /* Options window: width, height, x coorindate, y coordinate. */
 #define WYPE_GUI_OPTIONS_W 44
-#define WYPE_GUI_OPTIONS_H 8
+#define WYPE_GUI_OPTIONS_H 9
 #define WYPE_GUI_OPTIONS_Y 6
 #define WYPE_GUI_OPTIONS_X 0
 
@@ -111,7 +111,7 @@
 
 /* Stats window: width, height, x coordinate, y coordinate. */
 #define WYPE_GUI_STATS_W ( COLS - 44 )
-#define WYPE_GUI_STATS_H 8
+#define WYPE_GUI_STATS_H 9
 #define WYPE_GUI_STATS_Y 6
 #define WYPE_GUI_STATS_X 44
 
@@ -133,7 +133,7 @@
 /* Select window: width, height, x coordinate, y coordinate. */
 #define WYPE_GUI_MAIN_W COLS
 #define WYPE_GUI_MAIN_H ( LINES - WYPE_GUI_MAIN_Y - 1 )
-#define WYPE_GUI_MAIN_Y 14
+#define WYPE_GUI_MAIN_Y 15
 #define WYPE_GUI_MAIN_X 0
 
 #define SKIP_DEV_PREFIX 5
@@ -1599,16 +1599,42 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
         /* Refresh the window. */
         wnoutrefresh( main_window );
 
-        /* Update clock display in header */
+        /* Update IP / Time in stats window */
         {
-            time_t t = time( NULL );
-            struct tm* tm_info = localtime( &t );
-            char time_buf[16];
-            strftime( time_buf, sizeof( time_buf ), "%H:%M", tm_info );
-            wattron( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-            mvwprintw( header_window, 0, COLS - 9, " %s ", time_buf );
-            wattroff( header_window, COLOR_PAIR( 17 ) | A_BOLD );
-            wnoutrefresh( header_window );
+            time_t clock_t_now = time( NULL );
+            struct tm* clock_tm = localtime( &clock_t_now );
+            char clock_buf[16];
+            strftime( clock_buf, sizeof( clock_buf ), "%H:%M", clock_tm );
+
+            char ip_buf[64] = "";
+            struct ifaddrs* ifaddr = NULL;
+            if( getifaddrs( &ifaddr ) == 0 )
+            {
+                for( struct ifaddrs* ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next )
+                {
+                    if( ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET )
+                    {
+                        if( strcmp( ifa->ifa_name, "lo" ) == 0 )
+                            continue;
+                        struct sockaddr_in* sa = (struct sockaddr_in*) ifa->ifa_addr;
+                        inet_ntop( AF_INET, &sa->sin_addr, ip_buf, sizeof( ip_buf ) );
+                        break;
+                    }
+                }
+                freeifaddrs( ifaddr );
+            }
+
+            wattron( stats_window, COLOR_PAIR( 2 ) );
+            mvwprintw( stats_window, WYPE_GUI_STATS_MISC_Y, WYPE_GUI_STATS_MISC_X, "IP / Time" );
+            wattroff( stats_window, COLOR_PAIR( 2 ) );
+            wattron( stats_window, A_BOLD );
+            mvwprintw( stats_window, WYPE_GUI_STATS_MISC_Y, WYPE_GUI_STATS_TAB, "%-15s  %s",
+                       ip_buf[0] ? ip_buf : "---", clock_buf );
+            wattroff( stats_window, A_BOLD );
+
+            box( stats_window, 0, 0 );
+            mvwprintw( stats_window, 0, ( WYPE_GUI_STATS_W - strlen( stats_title ) ) / 2, "%s", stats_title );
+            wnoutrefresh( stats_window );
         }
 
         /* Output to physical screen */
@@ -6401,6 +6427,16 @@ void wype_gui_changelog( void )
     /* Changelog lines */
     const char* log[] = {
         "Wype Changelog",
+        "",
+        "v1.8.1 (2026-03-24)",
+        "",
+        "  Add:",
+        "  - CI workflow for automated build verification",
+        "  - Hostname, inventory nr. and comment in summary email per disk",
+        "",
+        "  Fix:",
+        "  - IP/clock visible from startup (not only during wipe)",
+        "  - API status visible again in options window",
         "",
         "v1.8.0 (2026-03-24)",
         "",
