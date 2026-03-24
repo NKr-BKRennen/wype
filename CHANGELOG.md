@@ -1,6 +1,15 @@
 RELEASE NOTES
 =============
 
+Wype v1.6.0 (2026-03-24)
+-----------------------
+**Add:**
+- Per-disk comment field: optional free-text comment per disk, included in email only (not on PDF certificate)
+- Comment editable in metadata editor (`e` key) — Tab/Arrow cycles through Hostname, Inventory Number and Comment
+- Comment shown in disk selection screen when set
+- Comment included in summary email below each disk entry
+- Comment exposed via Dashboard API (`comment` field in disk JSON)
+
 Wype v1.5.0 (2026-03-23)
 -----------------------
 **Add:**

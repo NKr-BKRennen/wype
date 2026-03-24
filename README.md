@@ -7,7 +7,7 @@ Based on nwipe (fork of `dwipe` / Darik's Boot and Nuke) with the following exte
 - **Wype Branding**: Logo, customized PDF certificate layout, modernized GUI
 - **PDF Certificates**: Hostname, Inventory Number, organization, customer on the certificate
 - **Secure Erase / Sanitize**: Hardware-based wipe methods for ATA, NVMe and SCSI (incl. SSDs)
-- **Per-Disk Metadata**: Hostname and Inventory Number per disk directly editable in the GUI
+- **Per-Disk Metadata**: Hostname, Inventory Number and optional Comment per disk directly editable in the GUI
 - **Email Delivery**: Batch delivery of all PDF certificates via SMTP after confirmation
 - **Help & Changelog**: Accessible directly in the GUI (`h` and `l`)
 - **Live Clock**: Current time always visible in the header
@@ -30,7 +30,7 @@ This is what a typical wipe process with Wype looks like:
 4. **Select Wipe Method** → press `m` → e.g. "DoD 5220.22-M" for HDDs or "Secure Erase / Sanitize >" for SSDs
 5. **Adjust options** (optional) → `v` Verification, `r` Rounds, `p` PRNG, `b` Blanking
 6. **Select disks** → Arrow keys + `Space` (or `Ctrl+A` for all)
-7. **Enter metadata** → press `e` on each disk → enter Hostname and Inventory Number
+7. **Enter metadata** → press `e` on each disk → enter Hostname, Inventory Number and optional Comment
 8. **Start wipe** → `S` (Shift+S) — Wype automatically warns if metadata is missing and if the wipe method doesn't match the drive type (SSD/HDD)
 9. **Wait** → Progress is displayed live. The current time is shown in the header. If email delivery is active, a notification is sent when all wipes are finished.
 10. **Confirm** → press `Enter` → PDFs are created and sent via email
@@ -104,15 +104,22 @@ PDF_Certificate: {
 | `PDF_tag` | Show user-defined tag on the certificate |
 | `User_Defined_Tag` | Free-text tag for the certificate |
 
-### Per-Disk Metadata (Hostname / Inventory Number)
+### Per-Disk Metadata (Hostname / Inventory Number / Comment)
 
-Individual values can be set per disk, which appear on the respective PDF certificate:
+Individual values can be set per disk:
 
 1. Focus a disk with arrow keys
-2. Press **e** → enter Hostname and Inventory Number (Tab switches between fields) → Enter
+2. Press **e** → enter Hostname, Inventory Number and optional Comment (Tab switches between fields) → Enter
 
-> These values are **not** saved in `wype.conf`, but only held at runtime and written to the PDF.
-> When starting a wipe, Wype automatically warns if metadata is missing for a selected disk.
+| Field | On PDF Certificate | In Email |
+|-------|-------------------|----------|
+| Hostname | Yes | Yes |
+| Inventory Number | Yes | Yes |
+| Comment | **No** | Yes |
+
+> These values are **not** saved in `wype.conf`, but only held at runtime.
+> Hostname and Inventory Number are written to the PDF certificate. The Comment field is included in the summary email only.
+> When starting a wipe, Wype automatically warns if Hostname or Inventory Number is missing for a selected disk.
 
 ### Email Delivery (SMTP)
 
@@ -166,7 +173,7 @@ Dashboard:
 
 The API password can also be set via environment variable: `WYPE_API_PASSWORD=your-password`
 
-**Self-Registration:** When `Dashboard_URL` is set (e.g. `192.168.1.5:8080`), wype automatically registers itself with the central dashboard every 30 seconds. New nodes appear as "Pending" in the dashboard and must be approved by an admin before they are polled for status. This replaces the old subnet-scanning approach.
+**Self-Registration:** When `Dashboard_URL` is set (e.g. `192.168.1.5:8080`), wype automatically registers itself with the central dashboard every 30 seconds. New nodes appear immediately and are polled for status right away.
 
 **Endpoints:**
 
@@ -337,7 +344,7 @@ Available via **GUI**: `m` → "Secure Erase / Sanitize >" in the method menu.
 |-----|----------|
 | **Space** | Select/deselect disk |
 | **S** | Start wipe (Shift+S) — checks for missing metadata |
-| **e** | EditDisk: edit Hostname/Inventory Number for the focused disk |
+| **e** | EditDisk: edit Hostname/Inventory Number/Comment for the focused disk |
 | **m** | Select Wipe Method |
 | **p** | Select PRNG |
 | **v** | Set Verification |
@@ -391,6 +398,13 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ---
 
 ## Changelog
+
+### v1.6.0 (2026-03-24)
+
+**Add:**
+- Per-disk comment field: optional free-text comment per disk, included in email only (not on PDF certificate)
+- Comment editable in metadata editor (`e` key) — Tab/Arrow cycles through Hostname, Inventory Number and Comment
+- Comment exposed via Dashboard API (`comment` field in disk JSON)
 
 ### v1.4.0 (2026-03-23)
 

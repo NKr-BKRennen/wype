@@ -5915,7 +5915,7 @@ void wype_gui_set_device_inventory_number( wype_context_t* c )
 void wype_gui_edit_disk_metadata( wype_context_t* c )
 {
     /**
-     * Combined popup for editing hostname and inventory number.
+     * Combined popup for editing hostname, inventory number and comment.
      * Tab switches between fields, Enter saves, ESC cancels.
      */
 
@@ -6217,7 +6217,7 @@ void wype_gui_help( void )
         wattron( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy, tab1, "e" );
         wattroff( main_window, COLOR_PAIR( 2 ) );
-        mvwprintw( main_window, yy++, tab2, "Edit hostname/inventory number" );
+        mvwprintw( main_window, yy++, tab2, "Edit hostname/inventory/comment" );
         wattron( main_window, COLOR_PAIR( 2 ) );
         mvwprintw( main_window, yy, tab1, "t" );
         wattroff( main_window, COLOR_PAIR( 2 ) );
@@ -6300,6 +6300,15 @@ void wype_gui_changelog( void )
     const char* log[] = {
         "Wype Changelog",
         "",
+        "v1.6.0 (2026-03-24)",
+        "",
+        "  Add:",
+        "  - Per-disk comment field (optional, email only, not on certificate)",
+        "  - Comment editable in metadata editor (e key): Tab through 3 fields",
+        "  - Comment shown in disk selection screen when set",
+        "  - Comment included in summary email below each disk entry",
+        "  - Comment exposed via Dashboard API for dashboard visibility",
+        "",
         "v1.3.0 (2026-03-20)",
         "",
         "  Add:",
@@ -6323,7 +6332,7 @@ void wype_gui_changelog( void )
         "",
         "  Add:",
         "  - Unified settings menu (c key) with arrow key navigation",
-        "  - Disk metadata editor (e key): Hostname + inventory number in one dialog",
+        "  - Disk metadata editor (e key): Hostname, inventory number + comment",
         "  - Help screen (h key) with all keybindings and workflow",
         "  - Changelog viewer (l key)",
         "  - Email status display in options window",
