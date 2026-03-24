@@ -2234,7 +2234,141 @@ void wype_gui_select( int* p_count, wype_context_t*** p_c )
                                     }
                                 }
 
-                                if( method_mismatch_ok )
+                                if( method_mismatch_ok && is_firmware_method )
+                                {
+                                    /* Pre-flight: check if firmware erase is supported per drive */
+                                    int preflight_ok = 1;
+                                    for( i = 0; i < count; i++ )
+                                    {
+                                        if( c[i]->select != WYPE_SELECT_TRUE )
+                                            continue;
+
+                                        int supported = 1;
+                                        char reason[128] = "";
+
+                                        if( c[i]->device_type == WYPE_DEVICE_NVME )
+                                        {
+                                            /* Check NVMe sanitize support via nvme id-ctrl */
+                                            char cmd[256];
+                                            char ctrl[64];
+                                            strncpy( ctrl, c[i]->device_name, sizeof( ctrl ) - 1 );
+                                            ctrl[sizeof( ctrl ) - 1] = '\0';
+                                            /* Strip partition number: /dev/nvme0n1 → /dev/nvme0 */
+                                            char* p = strstr( ctrl, "nvme" );
+                                            if( p )
+                                            {
+                                                char* n = p + 4;
+                                                while( *n >= '0' && *n <= '9' ) n++;
+                                                *n = '\0';
+                                            }
+                                            snprintf( cmd, sizeof( cmd ), "nvme id-ctrl %s 2>/dev/null | grep -i sanicap", ctrl );
+                                            FILE* fp = popen( cmd, "r" );
+                                            if( fp )
+                                            {
+                                                char buf[256] = "";
+                                                fgets( buf, sizeof( buf ), fp );
+                                                int rc = pclose( fp );
+                                                if( rc != 0 || buf[0] == '\0' )
+                                                {
+                                                    supported = 0;
+                                                    snprintf( reason, sizeof( reason ), "NVMe Sanitize not supported (sanicap not found)" );
+                                                }
+                                                else
+                                                {
+                                                    /* Check if sanicap indicates crypto erase support (bit 0) */
+                                                    unsigned long sanicap = 0;
+                                                    char* colon = strchr( buf, ':' );
+                                                    if( colon )
+                                                        sanicap = strtoul( colon + 1, NULL, 0 );
+                                                    if( wype_options.method == &wype_sanitize_crypto_erase
+                                                        || wype_options.method == &wype_sanitize_crypto_erase_verify )
+                                                    {
+                                                        if( !( sanicap & 0x1 ) )
+                                                        {
+                                                            supported = 0;
+                                                            snprintf( reason, sizeof( reason ), "NVMe Crypto Erase not supported (sanicap=0x%lx)", sanicap );
+                                                        }
+                                                    }
+                                                    else if( wype_options.method == &wype_sanitize_block_erase )
+                                                    {
+                                                        if( !( sanicap & 0x2 ) )
+                                                        {
+                                                            supported = 0;
+                                                            snprintf( reason, sizeof( reason ), "NVMe Block Erase not supported (sanicap=0x%lx)", sanicap );
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                supported = 0;
+                                                snprintf( reason, sizeof( reason ), "Failed to query NVMe capabilities (nvme-cli missing?)" );
+                                            }
+                                        }
+                                        else if( c[i]->device_type == WYPE_DEVICE_ATA )
+                                        {
+                                            /* Check ATA Secure Erase / Sanitize support via hdparm */
+                                            char cmd[256];
+                                            snprintf( cmd, sizeof( cmd ), "hdparm -I %s 2>/dev/null | grep -i -E 'supported.*sanitize|sanitize.*supported'", c[i]->device_name );
+                                            FILE* fp = popen( cmd, "r" );
+                                            if( fp )
+                                            {
+                                                char buf[256] = "";
+                                                fgets( buf, sizeof( buf ), fp );
+                                                int rc = pclose( fp );
+                                                if( wype_options.method == &wype_sanitize_crypto_erase
+                                                    || wype_options.method == &wype_sanitize_crypto_erase_verify
+                                                    || wype_options.method == &wype_sanitize_block_erase
+                                                    || wype_options.method == &wype_sanitize_overwrite )
+                                                {
+                                                    if( rc != 0 || buf[0] == '\0' )
+                                                    {
+                                                        supported = 0;
+                                                        snprintf( reason, sizeof( reason ), "ATA Sanitize not supported by this drive" );
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if( !supported )
+                                        {
+                                            werase( main_window );
+                                            box( main_window, 0, 0 );
+                                            wype_gui_title( main_window, " Method Not Supported " );
+
+                                            int wy = 3;
+                                            wattron( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            mvwprintw( main_window, wy++, 3, "ABORTED: %s", reason );
+                                            wattroff( main_window, COLOR_PAIR( 3 ) | A_BOLD );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3, "Drive : %s", c[i]->device_name );
+                                            if( c[i]->device_model )
+                                                mvwprintw( main_window, wy++, 3, "Model : %s", c[i]->device_model );
+                                            mvwprintw( main_window, wy++, 3, "Type  : %s", c[i]->device_type_str );
+                                            wy++;
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "The selected wipe method is not supported by this drive." );
+                                            mvwprintw( main_window, wy++, 3,
+                                                       "Please choose a different method or deselect this drive." );
+                                            wy += 2;
+                                            wattron( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+                                            mvwprintw( main_window, wy++, 3, "Press any key to return..." );
+                                            wattroff( main_window, COLOR_PAIR( 17 ) | A_BOLD );
+
+                                            wrefresh( main_window );
+                                            timeout( -1 );
+                                            getch();
+                                            preflight_ok = 0;
+                                            break;
+                                        }
+                                    }
+
+                                    if( preflight_ok )
+                                    {
+                                        startwipe = 1;
+                                    }
+                                }
+                                else if( method_mismatch_ok )
                                 {
                                     startwipe = 1;
                                 }
@@ -6267,6 +6401,33 @@ void wype_gui_changelog( void )
     /* Changelog lines */
     const char* log[] = {
         "Wype Changelog",
+        "",
+        "v1.8.0 (2026-03-24)",
+        "",
+        "  Add:",
+        "  - Pre-flight firmware erase check: verifies drive supports selected",
+        "    sanitize method (NVMe sanicap / ATA hdparm) before starting wipe",
+        "",
+        "  Fix:",
+        "  - GUI: options window bottom border visible, stats height matches",
+        "  - GUI: IP address and clock moved from header to stats window",
+        "  - NVMe device type shows 'NVME' instead of 'NVME-SSD'",
+        "  - Renamed 'Sanitize Crypto Erase + Verify' to '+ PRNG + Verify'",
+        "",
+        "v1.7.1 (2026-03-24)",
+        "",
+        "  Fix:",
+        "  - NVMe drives correctly detected as SSD",
+        "",
+        "v1.7.0 (2026-03-24)",
+        "",
+        "  Add:",
+        "  - SMART attributes exposed via Dashboard API (smartctl)",
+        "",
+        "v1.6.1 (2026-03-24)",
+        "",
+        "  Fix:",
+        "  - Race condition in device enumeration (uninitialized memory)",
         "",
         "v1.6.0 (2026-03-24)",
         "",

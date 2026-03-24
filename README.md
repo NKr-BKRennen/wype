@@ -11,7 +11,7 @@ Based on nwipe (fork of `dwipe` / Darik's Boot and Nuke) with the following exte
 - **Email Delivery**: Batch delivery of all PDF certificates via SMTP after confirmation
 - **Help & Changelog**: Accessible directly in the GUI (`h` and `l`)
 - **Live Clock**: Current time always visible in the header
-- **Smart Warnings**: Internet/NTP check on startup, SSD/HDD method mismatch detection
+- **Smart Warnings**: Internet/NTP check on startup, SSD/HDD method mismatch detection, firmware erase pre-flight check
 - **Dashboard API**: Built-in HTTP/JSON API for central monitoring via [wype-dashboard](https://github.com/NKr-BKRennen/wype-dashboard)
 - **IP Address Display**: System IP shown in the header next to the clock
 
@@ -398,6 +398,17 @@ Wype uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ---
 
 ## Changelog
+
+### v1.8.0 (2026-03-24)
+
+**Add:**
+- Pre-flight firmware erase check: before starting a firmware wipe (Sanitize Crypto/Block Erase), Wype checks if the drive actually supports it (NVMe sanicap / ATA hdparm) and aborts with an info window if not
+
+**Fix:**
+- GUI: options window bottom border now visible (height reduced to prevent overlap with main window)
+- GUI: stats window height matches options window, IP address and clock moved from header to stats window
+- NVMe device type now shows "NVME" instead of "NVME-SSD"
+- Renamed "Sanitize Crypto Erase + Verify" to "Sanitize Crypto Erase + PRNG + Verify"
 
 ### v1.7.1 (2026-03-24)
 
