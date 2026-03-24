@@ -215,6 +215,42 @@ static cJSON* build_status_json( void )
             cJSON_AddNumberToObject( node, "memory_total_mb", (double) ( mt / 1024 ) );
             cJSON_AddNumberToObject( node, "memory_used_mb", (double) ( ( mt - ma ) / 1024 ) );
         }
+
+        /* CPU temperature from thermal zones (millidegrees → °C) */
+        {
+            int cpu_temp_mdeg = -1;
+            char tz_path[128];
+            char tz_type[64];
+            int zone;
+            for( zone = 0; zone < 20 && cpu_temp_mdeg < 0; zone++ )
+            {
+                snprintf( tz_path, sizeof( tz_path ), "/sys/class/thermal/thermal_zone%d/type", zone );
+                FILE* tf = fopen( tz_path, "r" );
+                if( !tf )
+                    break; /* no more zones */
+                tz_type[0] = '\0';
+                if( fscanf( tf, "%63s", tz_type ) != 1 )
+                    tz_type[0] = '\0';
+                fclose( tf );
+
+                /* Accept common CPU-related zone types */
+                if( strstr( tz_type, "x86_pkg" ) || strstr( tz_type, "coretemp" )
+                    || strstr( tz_type, "cpu" ) || strstr( tz_type, "CPU" )
+                    || strstr( tz_type, "acpitz" ) || strstr( tz_type, "soc" ) )
+                {
+                    snprintf( tz_path, sizeof( tz_path ), "/sys/class/thermal/thermal_zone%d/temp", zone );
+                    FILE* vf = fopen( tz_path, "r" );
+                    if( vf )
+                    {
+                        if( fscanf( vf, "%d", &cpu_temp_mdeg ) != 1 )
+                            cpu_temp_mdeg = -1;
+                        fclose( vf );
+                    }
+                }
+            }
+            if( cpu_temp_mdeg >= 0 )
+                cJSON_AddNumberToObject( node, "cpu_temp_celsius", cpu_temp_mdeg / 1000 );
+        }
     }
 
     cJSON_AddItemToObject( root, "node", node );
@@ -277,9 +313,10 @@ static cJSON* build_status_json( void )
         cJSON_AddNumberToObject( err, "io_retries", (double) c->io_retries );
         cJSON_AddItemToObject( d, "errors", err );
 
-        /* temperature (millidegrees → °C, skip uninitialised sentinel) */
+        /* temperature (already in °C after temperature.c divides millideg by 1000;
+         * sentinel NO_TEMPERATURE_DATA = 1000000 means "no hwmon data") */
         if( c->temp1_input != 1000000 && c->temp1_input != -1 )
-            cJSON_AddNumberToObject( d, "temperature_celsius", c->temp1_input / 1000 );
+            cJSON_AddNumberToObject( d, "temperature_celsius", c->temp1_input );
         else
             cJSON_AddNullToObject( d, "temperature_celsius" );
 
