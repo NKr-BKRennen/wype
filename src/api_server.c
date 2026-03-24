@@ -317,12 +317,72 @@ static cJSON* build_status_json( void )
         cJSON_AddNumberToObject( err, "io_retries", (double) c->io_retries );
         cJSON_AddItemToObject( d, "errors", err );
 
-        /* temperature (already in °C after temperature.c divides millideg by 1000;
-         * sentinel NO_TEMPERATURE_DATA = 1000000 means "no hwmon data") */
+        /* temperature – current reading (already °C, see temperature.c) */
         if( c->temp1_input != 1000000 && c->temp1_input != -1 )
             cJSON_AddNumberToObject( d, "temperature_celsius", c->temp1_input );
         else
             cJSON_AddNullToObject( d, "temperature_celsius" );
+
+        /* temperature thresholds & history (all in °C, sentinel 1000000 = no data) */
+        {
+            cJSON* temps = cJSON_CreateObject();
+            if( c->temp1_crit != 1000000 ) cJSON_AddNumberToObject( temps, "crit", c->temp1_crit );
+            if( c->temp1_max != 1000000 ) cJSON_AddNumberToObject( temps, "max", c->temp1_max );
+            if( c->temp1_min != 1000000 ) cJSON_AddNumberToObject( temps, "min", c->temp1_min );
+            if( c->temp1_lcrit != 1000000 ) cJSON_AddNumberToObject( temps, "lcrit", c->temp1_lcrit );
+            if( c->temp1_highest != 1000000 ) cJSON_AddNumberToObject( temps, "highest", c->temp1_highest );
+            if( c->temp1_lowest != 1000000 ) cJSON_AddNumberToObject( temps, "lowest", c->temp1_lowest );
+            if( c->temp1_monitored_wipe_max != 1000000 )
+                cJSON_AddNumberToObject( temps, "wipe_max", c->temp1_monitored_wipe_max );
+            if( c->temp1_monitored_wipe_min != 1000000 )
+                cJSON_AddNumberToObject( temps, "wipe_min", c->temp1_monitored_wipe_min );
+            if( c->temp1_monitored_wipe_avg != 1000000 )
+                cJSON_AddNumberToObject( temps, "wipe_avg", c->temp1_monitored_wipe_avg );
+            cJSON_AddItemToObject( d, "temperature_thresholds", temps );
+        }
+
+        /* HPA (Host Protected Area) */
+        {
+            cJSON* hpa = cJSON_CreateObject();
+            cJSON_AddNumberToObject( hpa, "reported_set", (double) c->HPA_reported_set );
+            cJSON_AddNumberToObject( hpa, "reported_real", (double) c->HPA_reported_real );
+            if( c->HPA_sectors > 0 )
+            {
+                cJSON_AddNumberToObject( hpa, "sectors", (double) c->HPA_sectors );
+                cJSON_AddStringToObject( hpa, "size_text", c->HPA_size_text );
+            }
+            cJSON_AddItemToObject( d, "hpa", hpa );
+        }
+
+        /* DCO (Device Configuration Overlay) */
+        {
+            cJSON* dco = cJSON_CreateObject();
+            cJSON_AddNumberToObject( dco, "real_max_sectors", (double) c->DCO_reported_real_max_sectors );
+            cJSON_AddNumberToObject( dco, "real_max_size", (double) c->DCO_reported_real_max_size );
+            if( c->DCO_reported_real_max_size_text[0] != '\0' )
+                cJSON_AddStringToObject( dco, "real_max_size_text", c->DCO_reported_real_max_size_text );
+            if( c->Calculated_real_max_size_in_bytes > 0 )
+            {
+                cJSON_AddNumberToObject( dco, "calculated_real_max", (double) c->Calculated_real_max_size_in_bytes );
+                cJSON_AddStringToObject( dco, "calculated_real_max_text", c->Calculated_real_max_size_in_bytes_text );
+            }
+            cJSON_AddItemToObject( d, "dco", dco );
+        }
+
+        /* I/O mode & direction */
+        {
+            const char* mode = "auto";
+            if( c->io_mode == WYPE_IO_MODE_DIRECT ) mode = "direct";
+            else if( c->io_mode == WYPE_IO_MODE_CACHED ) mode = "cached";
+            cJSON_AddStringToObject( d, "io_mode", mode );
+
+            cJSON_AddStringToObject( d, "io_direction",
+                c->io_direction == WYPE_IO_DIRECTION_FORWARD ? "forward" : "reverse" );
+        }
+
+        /* sector sizes */
+        cJSON_AddNumberToObject( d, "block_size", c->device_block_size );
+        cJSON_AddNumberToObject( d, "physical_sector_size", c->device_phys_sector_size );
 
         /* bytes erased / duration */
         cJSON_AddNumberToObject( d, "bytes_erased", (double) c->bytes_erased );
